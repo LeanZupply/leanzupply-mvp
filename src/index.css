@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* LenzSupply Theme - Corporate Industrial B2B */
+    --background: 210 20% 98%;
+    --foreground: 140 10% 15%;
+    
+    --surface: 210 15% 95%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 140 10% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 140 10% 15%;
+
+    --primary: 145 25% 35%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 200 10% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 15% 92%;
+    --muted-foreground: 210 10% 45%;
+
+    --accent: 145 30% 40%;
+    --accent-foreground: 0 0% 100%;
+    
+    --success: 145 60% 35%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 35 85% 50%;
+    --warning-foreground: 0 0% 10%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 15% 85%;
+    --input: 210 15% 85%;
+    --ring: 145 25% 35%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 140 10% 15%;
+    --sidebar-primary: 145 25% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 15% 95%;
+    --sidebar-accent-foreground: 140 10% 15%;
+    --sidebar-border: 210 15% 90%;
+    --sidebar-ring: 145 25% 35%;
+  }
+
+  .dark {
+    --background: 140 15% 8%;
+    --foreground: 140 5% 90%;
+    
+    --surface: 140 15% 12%;
+
+    --card: 140 15% 12%;
+    --card-foreground: 140 5% 90%;
+
+    --popover: 140 15% 12%;
+    --popover-foreground: 140 5% 90%;
+
+    --primary: 145 30% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 200 15% 35%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 140 15% 18%;
+    --muted-foreground: 140 8% 60%;
+
+    --accent: 145 35% 50%;
+    --accent-foreground: 0 0% 100%;
+    
+    --success: 145 55% 40%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 35 80% 55%;
+    --warning-foreground: 0 0% 10%;
+
+    --destructive: 0 60% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 140 15% 22%;
+    --input: 140 15% 22%;
+    --ring: 145 30% 45%;
+    
+    --sidebar-background: 140 15% 12%;
+    --sidebar-foreground: 140 5% 90%;
+    --sidebar-primary: 145 30% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 140 15% 18%;
+    --sidebar-accent-foreground: 140 5% 90%;
+    --sidebar-border: 140 15% 20%;
+    --sidebar-ring: 145 30% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium;
+  }
+}
+
+@layer utilities {
+  .animate-pulse-delay {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation-delay: 1s;
+  }
+}
