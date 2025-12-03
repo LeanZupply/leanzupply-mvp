@@ -27,3 +27,5 @@ dist-ssr
 DATABASE_SCHEMA.sql
 DATA_SEED.sql
 migrate-storage.js
+
+.env
