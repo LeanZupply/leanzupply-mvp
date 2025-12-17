@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 const BuyerProfile = () => {
   const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
+  const hasInitialized = useRef(false);
   const [formData, setFormData] = useState({
     full_name: "",
     company_name: "",
@@ -35,7 +36,9 @@ const BuyerProfile = () => {
   });
 
   useEffect(() => {
-    if (profile) {
+    // Only initialize form once when profile first becomes available
+    if (profile && !hasInitialized.current) {
+      hasInitialized.current = true;
       setFormData({
         full_name: profile.full_name || "",
         company_name: profile.company_name || "",
