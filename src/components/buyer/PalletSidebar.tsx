@@ -18,11 +18,6 @@ export const PalletSidebar = () => {
   const navigate = useNavigate();
 
   const handleCheckout = async () => {
-    if (!profile?.is_verified) {
-      toast.error("Tu cuenta debe ser verificada para realizar pedidos");
-      return;
-    }
-
     if (items.length === 0) {
       toast.error("El pallet está vacío");
       return;
@@ -200,16 +195,9 @@ export const PalletSidebar = () => {
                   className="w-full"
                   size="lg"
                   onClick={handleCheckout}
-                  disabled={!profile?.is_verified}
                 >
-                  {profile?.is_verified ? "Realizar Pedido" : "Cuenta no verificada"}
+                  Realizar Pedido
                 </Button>
-
-                {!profile?.is_verified && (
-                  <p className="text-xs text-center text-muted-foreground">
-                    Tu cuenta debe ser verificada para realizar pedidos
-                  </p>
-                )}
               </div>
             </>
           )}

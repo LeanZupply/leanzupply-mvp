@@ -90,15 +90,6 @@ const BuyerCatalog = () => {
     e.preventDefault();
     if (!selectedProduct || !user) return;
 
-    // Check buyer verification
-    const {
-      data: profileData
-    } = await supabase.from("profiles").select("is_verified").eq("id", user.id).single();
-    if (!profileData?.is_verified) {
-      toast.error("Tu cuenta debe ser verificada antes de poder realizar pedidos");
-      setOrderDialogOpen(false);
-      return;
-    }
     const quantity = Number(orderForm.quantity);
     if (quantity < selectedProduct.moq) {
       toast.error(`La cantidad mínima es ${selectedProduct.moq} unidades`);

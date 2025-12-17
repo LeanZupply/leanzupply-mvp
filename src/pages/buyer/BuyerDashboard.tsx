@@ -149,27 +149,6 @@ const BuyerDashboard = () => {
         </p>
       </div>
 
-      {/* Verification Status Alert */}
-      {!profile?.is_verified && (
-        <Card className="border-warning bg-warning/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-warning text-base md:text-lg">
-              <Clock className="h-5 w-5" />
-              Verificación Pendiente
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Tu cuenta debe ser verificada antes de poder realizar pedidos. 
-              Puedes explorar el catálogo, pero necesitarás verificación para comprar.
-            </p>
-            <Button onClick={() => navigate("/buyer/profile")} size="sm">
-              Ver Mi Perfil
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Stats Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border-border hover:shadow-lg transition-shadow">

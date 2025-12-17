@@ -124,10 +124,6 @@ export default function Checkout() {
   };
   const handleConfirmOrder = async () => {
     if (!user || !product) return;
-    if (!profile?.is_verified) {
-      toast.error("Tu cuenta debe estar verificada para hacer pedidos");
-      return;
-    }
     if (quantity < product.moq) {
       toast.error(`La cantidad mínima es ${product.moq} unidades`);
       return;
