@@ -777,10 +777,18 @@ export type Database = {
           company_name: string
           country: string
           created_at: string | null
+          delivery_address: string | null
+          delivery_city: string | null
+          delivery_hours: string | null
+          delivery_phone: string | null
+          delivery_postal_code: string | null
           email: string
+          eori_number: string | null
           full_name: string
           id: string
+          is_professional_business: boolean | null
           is_verified: boolean | null
+          mobile_phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
         }
@@ -788,10 +796,18 @@ export type Database = {
           company_name: string
           country: string
           created_at?: string | null
+          delivery_address?: string | null
+          delivery_city?: string | null
+          delivery_hours?: string | null
+          delivery_phone?: string | null
+          delivery_postal_code?: string | null
           email: string
+          eori_number?: string | null
           full_name: string
           id: string
+          is_professional_business?: boolean | null
           is_verified?: boolean | null
+          mobile_phone?: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
@@ -799,10 +815,18 @@ export type Database = {
           company_name?: string
           country?: string
           created_at?: string | null
+          delivery_address?: string | null
+          delivery_city?: string | null
+          delivery_hours?: string | null
+          delivery_phone?: string | null
+          delivery_postal_code?: string | null
           email?: string
+          eori_number?: string | null
           full_name?: string
           id?: string
+          is_professional_business?: boolean | null
           is_verified?: boolean | null
+          mobile_phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }

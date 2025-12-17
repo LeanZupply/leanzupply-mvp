@@ -14,6 +14,20 @@ interface Profile {
   country: string;
   role: UserRole;
   is_verified: boolean;
+  // Buyer profile fields
+  tax_id?: string;
+  eori_number?: string;
+  mobile_phone?: string;
+  address?: string;
+  city?: string;
+  postal_code?: string;
+  importer_status?: string;
+  delivery_address?: string;
+  delivery_city?: string;
+  delivery_postal_code?: string;
+  delivery_hours?: string;
+  delivery_phone?: string;
+  is_professional_business?: boolean;
 }
 
 interface AuthContextType {

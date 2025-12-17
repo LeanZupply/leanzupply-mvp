@@ -138,34 +138,69 @@ export const profileSchema = z.object({
     .trim()
     .min(1, 'El nombre completo es requerido')
     .max(100, 'El nombre completo no puede exceder 100 caracteres'),
-  
+
   company_name: z.string()
     .trim()
     .min(1, 'El nombre de la empresa es requerido')
     .max(200, 'El nombre de la empresa no puede exceder 200 caracteres'),
-  
-  country: z.string()
-    .trim()
-    .min(1, 'El país es requerido')
-    .max(100, 'El país no puede exceder 100 caracteres'),
-  
+
+  country: z.literal('España', { errorMap: () => ({ message: 'El país debe ser España' }) }),
+
   tax_id: z.string()
-    .max(50, 'El Tax ID no puede exceder 50 caracteres')
-    .optional(),
-  
+    .trim()
+    .min(1, 'El NIF/CIF/NIE/DNI/VAT-ID es requerido')
+    .max(50, 'El identificador fiscal no puede exceder 50 caracteres'),
+
+  eori_number: z.string()
+    .trim()
+    .min(1, 'El número EORI es requerido')
+    .max(20, 'El número EORI no puede exceder 20 caracteres'),
+
+  mobile_phone: z.string()
+    .trim()
+    .min(1, 'El número de contacto móvil es requerido')
+    .max(20, 'El número de contacto móvil no puede exceder 20 caracteres'),
+
   address: z.string()
-    .max(500, 'La dirección no puede exceder 500 caracteres')
+    .max(500, 'La dirección fiscal no puede exceder 500 caracteres')
     .optional(),
-  
+
   city: z.string()
     .max(100, 'La ciudad no puede exceder 100 caracteres')
     .optional(),
-  
+
   postal_code: z.string()
     .max(20, 'El código postal no puede exceder 20 caracteres')
     .optional(),
-  
+
   importer_status: z.string()
     .max(100, 'El estado de importador no puede exceder 100 caracteres')
     .optional(),
+
+  delivery_address: z.string()
+    .trim()
+    .min(1, 'El domicilio exacto de entrega es requerido')
+    .max(500, 'El domicilio de entrega no puede exceder 500 caracteres'),
+
+  delivery_city: z.string()
+    .trim()
+    .min(1, 'La ciudad de entrega es requerida')
+    .max(100, 'La ciudad de entrega no puede exceder 100 caracteres'),
+
+  delivery_postal_code: z.string()
+    .trim()
+    .min(1, 'El código postal de entrega es requerido')
+    .max(10, 'El código postal de entrega no puede exceder 10 caracteres'),
+
+  delivery_hours: z.string()
+    .max(100, 'Los horarios de entrega no pueden exceder 100 caracteres')
+    .optional(),
+
+  delivery_phone: z.string()
+    .max(20, 'El teléfono de contacto de entrega no puede exceder 20 caracteres')
+    .optional(),
+
+  is_professional_business: z.literal(true, {
+    errorMap: () => ({ message: 'Debe declarar ser empresa profesional activa registrada' })
+  }),
 });
