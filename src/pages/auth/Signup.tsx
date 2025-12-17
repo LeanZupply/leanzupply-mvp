@@ -65,7 +65,7 @@ const Signup = () => {
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/auth/login`,
           data: {
             full_name: formData.fullName,
             company_name: formData.companyName,

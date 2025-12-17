@@ -36,6 +36,10 @@ interface Product {
     brand_logo_url?: string | null;
   } | null;
 }
+// Feature flags for landing page sections
+const SHOW_WHAT_WE_SOLVE_SECTION = false; // Set to true to restore this section
+const SHOW_SEO_SECTION = false; // Set to true to restore this section
+
 const Index = () => {
   const navigate = useNavigate();
   const {
@@ -207,119 +211,129 @@ const Index = () => {
       <section className="relative overflow-hidden px-4 py-20 lg:py-32">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,hsl(var(--primary)/0.1),transparent_50%)]" />
-        
+
         <div className="container mx-auto relative">
-          <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
+          <div className="max-w-4xl mx-auto text-center animate-fade-in">
+            {/* Title */}
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
               Negocios reales. Fabricantes reales.{" "}
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Comercio global sin intermediarios.
               </span>
             </h2>
-            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-              LeanZupply es una plataforma D2B que une empresas europeas con fábricas verificadas en Asia y Europa.
+
+            {/* Subtitle - tight coupling to title */}
+            <p className="mt-6 text-xl md:text-2xl font-medium text-foreground/70 max-w-2xl mx-auto">
+              Comprar maquinaria internacionalmente nunca fue tan simple.
+            </p>
+
+            {/* Description - more separation, quieter */}
+            <p className="mt-8 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+              LeanZupply es una plataforma D2B que une empresas profesionales europeas con fábricas verificadas en Asia y en Europa.
             </p>
           </div>
         </div>
       </section>
 
       {/* What We Solve Section */}
-      <section className="border-t border-border bg-muted/30 px-4 py-20">
-        <div className="container mx-auto">
-          <div className="text-center space-y-4 mb-16">
-            <h3 className="text-4xl md:text-5xl font-bold">
-              Importá y exportá maquinaria profesional con{" "}
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                transparencia, velocidad y control total
-              </span>
-            </h3>
-          </div>
-
-          <div className="max-w-5xl mx-auto">
-            <h4 className="text-2xl font-bold mb-8 text-center">¿Qué resolvemos?</h4>
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="border-2 hover:border-primary/50 transition-all">
-                <CardContent className="pt-6 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
-                    <div>
-                      <h5 className="font-semibold text-lg mb-1">Fabricantes auditados</h5>
-                      <p className="text-muted-foreground text-sm">Sin intermediarios falsos.</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-2 hover:border-primary/50 transition-all">
-                <CardContent className="pt-6 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
-                    <div>
-                      <h5 className="font-semibold text-lg mb-1">Operaciones integradas</h5>
-                      <p className="text-muted-foreground text-sm">Cotizá, pagá y recibí.</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-2 hover:border-primary/50 transition-all">
-                <CardContent className="pt-6 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
-                    <div>
-                      <h5 className="font-semibold text-lg mb-1">Logística global</h5>
-                      <p className="text-muted-foreground text-sm">Control de punta a punta.</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-2 hover:border-primary/50 transition-all">
-                <CardContent className="pt-6 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
-                    <div>
-                      <h5 className="font-semibold text-lg mb-1">Precios directos FOB</h5>
-                      <p className="text-muted-foreground text-sm">Sin márgenes ocultos.</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+      {SHOW_WHAT_WE_SOLVE_SECTION && (
+        <section className="border-t border-border bg-muted/30 px-4 py-20">
+          <div className="container mx-auto">
+            <div className="text-center space-y-4 mb-16">
+              <h3 className="text-4xl md:text-5xl font-bold">
+                Importá y exportá maquinaria profesional con{" "}
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  transparencia, velocidad y control total
+                </span>
+              </h3>
             </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
-              <Button 
-                size="lg" 
-                className="gap-2 shadow-lg text-sm sm:text-base h-12 sm:h-14 px-4 sm:px-10 whitespace-normal sm:whitespace-nowrap" 
-                onClick={() => handleCTAClick("join")}
-              >
-                <Factory className="h-5 w-5 shrink-0" />
-                <span className="text-left sm:text-center">
-                  <span className="hidden sm:inline">SOY FABRICANTE → publicar mis productos sin coste</span>
-                  <span className="sm:hidden">FABRICANTE → publicar mis productos</span>
-                </span>
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="gap-2 text-sm sm:text-base h-12 sm:h-14 px-4 sm:px-10 border-2 whitespace-normal sm:whitespace-nowrap" 
-                onClick={() => handleCTAClick("explore")}
-              >
-                <ShoppingCart className="h-5 w-5 shrink-0" />
-                <span className="text-left sm:text-center">
-                  <span className="hidden sm:inline">SOY COMPRADOR → explorar maquinaria validada</span>
-                  <span className="sm:hidden">COMPRADOR → explorar maquinaria</span>
-                </span>
-              </Button>
-            </div>
+            <div className="max-w-5xl mx-auto">
+              <h4 className="text-2xl font-bold mb-8 text-center">¿Qué resolvemos?</h4>
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card className="border-2 hover:border-primary/50 transition-all">
+                  <CardContent className="pt-6 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
+                      <div>
+                        <h5 className="font-semibold text-lg mb-1">Fabricantes auditados</h5>
+                        <p className="text-muted-foreground text-sm">Sin intermediarios falsos.</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <p className="text-center text-xl font-semibold mt-12 text-muted-foreground">
-              Optimizá tus relaciones comerciales D2B
-            </p>
+                <Card className="border-2 hover:border-primary/50 transition-all">
+                  <CardContent className="pt-6 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
+                      <div>
+                        <h5 className="font-semibold text-lg mb-1">Operaciones integradas</h5>
+                        <p className="text-muted-foreground text-sm">Cotizá, pagá y recibí.</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 hover:border-primary/50 transition-all">
+                  <CardContent className="pt-6 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
+                      <div>
+                        <h5 className="font-semibold text-lg mb-1">Logística global</h5>
+                        <p className="text-muted-foreground text-sm">Control de punta a punta.</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 hover:border-primary/50 transition-all">
+                  <CardContent className="pt-6 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
+                      <div>
+                        <h5 className="font-semibold text-lg mb-1">Precios directos FOB</h5>
+                        <p className="text-muted-foreground text-sm">Sin márgenes ocultos.</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
+                <Button
+                  size="lg"
+                  className="gap-2 shadow-lg text-sm sm:text-base h-12 sm:h-14 px-4 sm:px-10 whitespace-normal sm:whitespace-nowrap"
+                  onClick={() => handleCTAClick("join")}
+                >
+                  <Factory className="h-5 w-5 shrink-0" />
+                  <span className="text-left sm:text-center">
+                    <span className="hidden sm:inline">SOY FABRICANTE → publicar mis productos sin coste</span>
+                    <span className="sm:hidden">FABRICANTE → publicar mis productos</span>
+                  </span>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="gap-2 text-sm sm:text-base h-12 sm:h-14 px-4 sm:px-10 border-2 whitespace-normal sm:whitespace-nowrap"
+                  onClick={() => handleCTAClick("explore")}
+                >
+                  <ShoppingCart className="h-5 w-5 shrink-0" />
+                  <span className="text-left sm:text-center">
+                    <span className="hidden sm:inline">SOY COMPRADOR → explorar maquinaria validada</span>
+                    <span className="sm:hidden">COMPRADOR → explorar maquinaria</span>
+                  </span>
+                </Button>
+              </div>
+
+              <p className="text-center text-xl font-semibold mt-12 text-muted-foreground">
+                Optimizá tus relaciones comerciales D2B
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Public Catalog */}
       <section className="border-t border-border px-4 py-20 bg-background">
@@ -464,7 +478,7 @@ const Index = () => {
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <span className="text-sm">Publicá tus productos sin costes fijos</span>
+                    <span className="text-sm">Publicita tus productos sin fricciones</span>
                   </li>
                   
                   <li className="flex items-start gap-2">
@@ -490,7 +504,7 @@ const Index = () => {
                   <h4 className="text-2xl font-bold">PARA COMPRADORES</h4>
                   <p className="text-xl font-semibold">Comprá directo de fábrica.</p>
                   <p className="text-muted-foreground">
-                    Accedé a maquinaria certificada con precios FOB y tiempos de entrega garantizados.
+                    Obtén acceso a maquinaria certificada con precios FOB y tiempos de entrega definidos.
                   </p>
                 </div>
 
@@ -546,26 +560,28 @@ const Index = () => {
       </section>
 
       {/* SEO Section */}
-      <section className="border-t border-border px-4 py-16 bg-background">
-        <div className="container mx-auto max-w-4xl space-y-6 text-center">
-          <h3 className="text-3xl font-bold">Optimizá tus relaciones comerciales D2B</h3>
-          <div className="space-y-4 text-lg leading-relaxed text-muted-foreground">
-            <p>
-              En <strong>LeanZupply</strong> conectamos fábricas certificadas con empresas que buscan equipamiento profesional de calidad. 
-              Nuestra plataforma D2B facilita la gestión de pedidos, contratos y logística internacional en un solo lugar.
-            </p>
-            <p>
-              Los fabricantes pueden exhibir sus productos a compradores verificados, mientras las empresas acceden a <strong>precios FOB competitivos</strong> y 
-              tiempos de entrega claros. Leanzupply es la nueva forma de optimizar las relaciones comerciales entre industrias, 
-              con transparencia, eficiencia y tecnología.
-            </p>
-            <p className="text-base">
-              Nuestra plataforma soporta el <strong>Incoterm FOB</strong> (Free On Board) y facilita todo el proceso de 
-              importación y exportación, desde la cotización inicial hasta la entrega final.
-            </p>
+      {SHOW_SEO_SECTION && (
+        <section className="border-t border-border px-4 py-16 bg-background">
+          <div className="container mx-auto max-w-4xl space-y-6 text-center">
+            <h3 className="text-3xl font-bold">Optimizá tus relaciones comerciales D2B</h3>
+            <div className="space-y-4 text-lg leading-relaxed text-muted-foreground">
+              <p>
+                En <strong>LeanZupply</strong> conectamos fábricas certificadas con empresas que buscan equipamiento profesional de calidad.
+                Nuestra plataforma D2B facilita la gestión de pedidos, contratos y logística internacional en un solo lugar.
+              </p>
+              <p>
+                Los fabricantes pueden exhibir sus productos a compradores verificados, mientras las empresas acceden a <strong>precios FOB competitivos</strong> y
+                tiempos de entrega claros. Leanzupply es la nueva forma de optimizar las relaciones comerciales entre industrias,
+                con transparencia, eficiencia y tecnología.
+              </p>
+              <p className="text-base">
+                Nuestra plataforma soporta el <strong>Incoterm FOB</strong> (Free On Board) y facilita todo el proceso de
+                importación y exportación, desde la cotización inicial hasta la entrega final.
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-border bg-muted/50 px-4 py-12">
