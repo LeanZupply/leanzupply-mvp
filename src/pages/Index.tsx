@@ -241,7 +241,7 @@ const Index = () => {
           <div className="container mx-auto">
             <div className="text-center space-y-4 mb-16">
               <h3 className="text-4xl md:text-5xl font-bold">
-                Importá y exportá maquinaria profesional con{" "}
+                Importa y exporta maquinaria profesional con{" "}
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   transparencia, velocidad y control total
                 </span>
@@ -269,7 +269,7 @@ const Index = () => {
                       <CheckCircle2 className="h-6 w-6 text-primary shrink-0 mt-1" />
                       <div>
                         <h5 className="font-semibold text-lg mb-1">Operaciones integradas</h5>
-                        <p className="text-muted-foreground text-sm">Cotizá, pagá y recibí.</p>
+                        <p className="text-muted-foreground text-sm">Cotiza, paga y recibe.</p>
                       </div>
                     </div>
                   </CardContent>
@@ -328,7 +328,7 @@ const Index = () => {
               </div>
 
               <p className="text-center text-xl font-semibold mt-12 text-muted-foreground">
-                Optimizá tus relaciones comerciales D2B
+                Optimiza tus relaciones comerciales D2B
               </p>
             </div>
           </div>
@@ -341,7 +341,7 @@ const Index = () => {
           <div className="text-center space-y-4">
             <h3 className="text-4xl font-bold">Catálogo Curado de Productos</h3>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Descubrí productos de fabricantes verificados con información detallada
+              Descubre productos de fabricantes verificados con información detallada
             </p>
           </div>
 
@@ -465,9 +465,9 @@ const Index = () => {
                     <Factory className="h-8 w-8 text-primary" />
                   </div>
                   <h4 className="text-2xl font-bold">PARA FABRICANTES</h4>
-                  <p className="text-xl font-semibold">Vendé globalmente, sin riesgo.</p>
+                  <p className="text-xl font-semibold">Vende globalmente, sin riesgo.</p>
                   <p className="text-muted-foreground">
-                    Accedé a empresas verificadas, recibí pagos seguros y gestioná todo desde un panel único.
+                    Accede a empresas verificadas, recibe pagos seguros y gestiona todo desde un panel único.
                   </p>
                 </div>
 
@@ -502,7 +502,7 @@ const Index = () => {
                     <ShoppingCart className="h-8 w-8 text-accent" />
                   </div>
                   <h4 className="text-2xl font-bold">PARA COMPRADORES</h4>
-                  <p className="text-xl font-semibold">Comprá directo de fábrica.</p>
+                  <p className="text-xl font-semibold">Compra directo de fábrica.</p>
                   <p className="text-muted-foreground">
                     Obtén acceso a maquinaria certificada con precios FOB y tiempos de entrega definidos.
                   </p>
@@ -563,7 +563,7 @@ const Index = () => {
       {SHOW_SEO_SECTION && (
         <section className="border-t border-border px-4 py-16 bg-background">
           <div className="container mx-auto max-w-4xl space-y-6 text-center">
-            <h3 className="text-3xl font-bold">Optimizá tus relaciones comerciales D2B</h3>
+            <h3 className="text-3xl font-bold">Optimiza tus relaciones comerciales D2B</h3>
             <div className="space-y-4 text-lg leading-relaxed text-muted-foreground">
               <p>
                 En <strong>LeanZupply</strong> conectamos fábricas certificadas con empresas que buscan equipamiento profesional de calidad.

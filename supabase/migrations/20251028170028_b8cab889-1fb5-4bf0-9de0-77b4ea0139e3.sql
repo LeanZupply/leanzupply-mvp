@@ -9,7 +9,7 @@ ALTER TABLE public.profiles
 -- Índices útiles
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 
-COMMENT ON COLUMN public.profiles.tax_id IS 'CUIT/Tax ID de la empresa';
+COMMENT ON COLUMN public.profiles.tax_id IS 'Identificación fiscal de la empresa';
 COMMENT ON COLUMN public.profiles.address IS 'Dirección fiscal completa';
 COMMENT ON COLUMN public.profiles.importer_status IS 'Estado de importador/aduana';
 COMMENT ON COLUMN public.profiles.billing_info IS 'Datos de facturación en formato JSON';

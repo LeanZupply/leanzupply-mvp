@@ -188,7 +188,7 @@ const Signup = () => {
           {/* Footer */}
           <div className="pt-6 border-t border-border">
             <p className="text-center text-sm text-muted-foreground">
-              ¿Ya tenés cuenta?{" "}
+              ¿Ya tienes cuenta?{" "}
               <button onClick={() => navigate("/auth/login")} className="font-medium text-primary hover:text-primary/80 transition-colors">
                 Iniciar sesión
               </button>

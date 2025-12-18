@@ -77,10 +77,10 @@ const Login = () => {
               <span className="text-xl sm:text-2xl font-bold text-foreground">LeanZupply</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-              Iniciá sesión en tu cuenta
+              Inicia sesión en tu cuenta
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Gestioná tus productos, pedidos y conexiones
+              Gestiona tus productos, pedidos y conexiones
             </p>
           </div>
 
@@ -118,7 +118,7 @@ const Login = () => {
           {/* Footer */}
           <div className="pt-4 sm:pt-6 border-t border-border">
             <p className="text-center text-sm text-muted-foreground">
-              ¿No tenés cuenta?{" "}
+              ¿No tienes cuenta?{" "}
               <button onClick={() => navigate("/auth/signup")} className="font-medium text-primary hover:text-primary/80 transition-colors">
                 Crear una cuenta
               </button>
