@@ -169,7 +169,7 @@ export default function ManufacturerProfile() {
   // Helper to convert stored paths to public URLs (handles both old paths and new URLs)
   const getManufacturerDocUrl = (path: string): string => {
     if (!path) return '';
-    if (path.startsWith('http')) return path;
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
     const { data } = supabase.storage.from('manufacturer-docs').getPublicUrl(path);
     return data.publicUrl;
   };
