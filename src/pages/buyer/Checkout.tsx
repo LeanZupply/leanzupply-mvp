@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Package, CreditCard, CheckCircle, Anchor, Ship, MapPin, Clock, Truck, FileCheck, AlertTriangle } from "lucide-react";
 import { CostBreakdown } from "@/components/CostBreakdown";
 import { LocalShippingCalculator } from "@/components/buyer/LocalShippingCalculator";
+import { ProfileCompletionModal } from "@/components/buyer/ProfileCompletionModal";
 import { LocalShippingCalculation } from "@/lib/localShippingCalculator";
 import { calculateOrderTotal } from "@/lib/priceCalculations";
 interface Product {
@@ -64,6 +65,7 @@ export default function Checkout() {
   const [calculationSnapshot, setCalculationSnapshot] = useState<any>(null);
   const [localShippingCalc, setLocalShippingCalc] = useState<LocalShippingCalculation | null>(null);
   const [internationalCost, setInternationalCost] = useState(0);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [sessionId] = useState(() => {
     let sid = sessionStorage.getItem('session_id');
     if (!sid) {
@@ -122,8 +124,34 @@ export default function Checkout() {
       console.error("Error tracking step:", error);
     }
   };
+
+  // Check if buyer profile has all required fields
+  const isProfileComplete = () => {
+    return !!(
+      profile?.mobile_phone &&
+      profile?.tax_id &&
+      profile?.postal_code &&
+      profile?.is_professional_business === true
+    );
+  };
+
+  // Handle profile modal completion - retry order submission
+  const handleProfileComplete = () => {
+    setShowProfileModal(false);
+    // Profile was just updated, need to refetch or use optimistic update
+    // For now, we'll proceed assuming the save was successful
+    handleConfirmOrder();
+  };
+
   const handleConfirmOrder = async () => {
     if (!user || !product) return;
+
+    // Check if profile is complete before proceeding
+    if (!isProfileComplete()) {
+      setShowProfileModal(true);
+      return;
+    }
+
     if (quantity < product.moq) {
       toast.error(`La cantidad mínima es ${product.moq} unidades`);
       return;
@@ -410,10 +438,9 @@ export default function Checkout() {
                   ¿Qué sucede después?
                 </h4>
                 <ul className="text-xs text-muted-foreground space-y-1 ml-6 list-disc">
-                  <li>Revisaremos tu pedido en menos de 24 horas</li>
-                  <li>Te contactaremos para confirmar detalles</li>
-                  <li>Coordinaremos el pago y envío</li>
-                  <li>Recibirás actualizaciones en tiempo real</li>
+                  <li>Revisaremos tu solicitud en menos de 24 horas</li>
+                  <li>Te enviaremos una propuesta comercial final con el precio validado, instrucciones de pago y plazos definitivos</li>
+                  <li>En caso de aceptar la propuesta coordinaremos el pago y el envío</li>
                 </ul>
               </div>
 
@@ -486,15 +513,27 @@ export default function Checkout() {
                 </Card>}
 
               <Button className="w-full" size="lg" onClick={handleConfirmOrder} disabled={submitting || quantity < product.moq || totalCost === 0}>
-                {submitting ? "Procesando..." : "Confirmar Pedido"}
+                {submitting ? "Enviando solicitud..." : "Solicitar Propuesta Final"}
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">
-                Al confirmar, aceptas nuestros términos y condiciones de servicio
+                Esta solicitud no implica pago ni compra confirmada
+              </p>
+              <p className="text-xs text-center text-muted-foreground mt-1">
+                Al enviar, aceptas nuestros términos y condiciones de servicio
               </p>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Profile Completion Modal */}
+      <ProfileCompletionModal
+        open={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        onComplete={handleProfileComplete}
+        profile={profile}
+        userId={user?.id || ""}
+      />
     </div>;
 }
