@@ -135,10 +135,10 @@ export default function ProductDetail() {
   }, [product?.moq]);
 
   const trackProductView = async () => {
-    if (!id) return;
+    if (!id || !user) return;
 
     try {
-      // Incrementa views y registra 'viewed' internamente
+      // Incrementa views y registra 'viewed' internamente (solo para usuarios autenticados)
       await supabase.rpc("track_product_view", { p_product_id: id });
     } catch (error) {
       console.error("Error tracking view:", error);
