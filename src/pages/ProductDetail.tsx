@@ -684,6 +684,15 @@ export default function ProductDetail() {
                         <span>TOTAL ESTIMADO</span>
                         <span className="text-primary">{deliveryTimeline.total_min_days} - {deliveryTimeline.total_max_days} días</span>
                       </div>
+                      {/* Clarifications */}
+                      <div className="mt-3 pt-3 border-t border-blue-300 dark:border-blue-700 space-y-1">
+                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                          <strong>MOQ:</strong> Cantidad de Unidades Mínimas Requeridas para realizar un Pedido
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                          <strong>Producto en stock:</strong> Producto en stock en fábrica
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
