@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -48,15 +48,25 @@ export function ProfileCompletionModal({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Update form when profile changes
+  // Track if form has been initialized for current modal session
+  const initializedRef = useRef(false);
+
+  // Initialize form only when modal opens, not on every profile change
+  // This prevents form reset when switching browser tabs (which triggers profile refetch)
   useEffect(() => {
-    if (profile) {
+    if (open && !initializedRef.current && profile) {
       setMobilePhone(profile.mobile_phone || "");
       setTaxId(profile.tax_id || "");
       setPostalCode(profile.postal_code || "");
       setIsProfessionalBusiness(profile.is_professional_business || false);
+      initializedRef.current = true;
     }
-  }, [profile]);
+
+    // Reset initialization flag when modal closes
+    if (!open) {
+      initializedRef.current = false;
+    }
+  }, [open, profile]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
