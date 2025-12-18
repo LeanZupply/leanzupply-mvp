@@ -774,6 +774,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
+          city: string | null
           company_name: string
           country: string
           created_at: string | null
@@ -786,13 +788,18 @@ export type Database = {
           eori_number: string | null
           full_name: string
           id: string
+          importer_status: string | null
           is_professional_business: boolean | null
           is_verified: boolean | null
           mobile_phone: string | null
+          postal_code: string | null
           role: Database["public"]["Enums"]["user_role"]
+          tax_id: string | null
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
+          city?: string | null
           company_name: string
           country: string
           created_at?: string | null
@@ -805,13 +812,18 @@ export type Database = {
           eori_number?: string | null
           full_name: string
           id: string
+          importer_status?: string | null
           is_professional_business?: boolean | null
           is_verified?: boolean | null
           mobile_phone?: string | null
+          postal_code?: string | null
           role: Database["public"]["Enums"]["user_role"]
+          tax_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
+          city?: string | null
           company_name?: string
           country?: string
           created_at?: string | null
@@ -824,10 +836,13 @@ export type Database = {
           eori_number?: string | null
           full_name?: string
           id?: string
+          importer_status?: string | null
           is_professional_business?: boolean | null
           is_verified?: boolean | null
           mobile_phone?: string | null
+          postal_code?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          tax_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -1028,7 +1043,7 @@ export type Database = {
       }
       get_orders_by_country:
         | {
-            Args: { p_end_date?: string; p_start_date?: string }
+            Args: never
             Returns: {
               country: string
               total_amount: number
@@ -1036,7 +1051,7 @@ export type Database = {
             }[]
           }
         | {
-            Args: never
+            Args: { p_end_date?: string; p_start_date?: string }
             Returns: {
               country: string
               total_amount: number
