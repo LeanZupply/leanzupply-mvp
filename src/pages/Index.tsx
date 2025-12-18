@@ -571,7 +571,7 @@ const Index = () => {
               </p>
               <p>
                 Los fabricantes pueden exhibir sus productos a compradores verificados, mientras las empresas acceden a <strong>precios FOB competitivos</strong> y
-                tiempos de entrega claros. Leanzupply es la nueva forma de optimizar las relaciones comerciales entre industrias,
+                tiempos de entrega claros. LeanZupply es la nueva forma de optimizar las relaciones comerciales entre industrias,
                 con transparencia, eficiencia y tecnología.
               </p>
               <p className="text-base">
@@ -644,7 +644,7 @@ const Index = () => {
           <div className="pt-8 border-t border-border">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-sm text-muted-foreground text-center md:text-left">
-                © 2025 Leanzupply. Plataforma D2B para equipamiento industrial.
+                © 2025 LeanZupply. Plataforma D2B para equipamiento industrial.
               </p>
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-xs">

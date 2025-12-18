@@ -1103,7 +1103,7 @@ export default function ManufacturerProfile() {
                 onCheckedChange={(checked) => setValue("terms_accepted", checked as boolean)}
               />
               <Label htmlFor="terms_accepted" className="text-sm cursor-pointer">
-                Confirmo que la información proporcionada es veraz y acepto los Términos y Condiciones de "LenzSupply".
+                Confirmo que la información proporcionada es veraz y acepto los Términos y Condiciones de "LeanZupply".
               </Label>
             </div>
             {errors.terms_accepted && <p className="text-sm text-destructive">{errors.terms_accepted.message}</p>}

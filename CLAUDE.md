@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LenzSupply is a D2B (Direct-to-Business) platform connecting certified manufacturers from Latin America with international business buyers. The platform handles product sourcing, logistics coordination, and export validation.
+LeanZupply is a D2B (Direct-to-Business) platform connecting certified manufacturers from Latin America with international business buyers. The platform handles product sourcing, logistics coordination, and export validation.
 
 **This project is in production.** Take extra care when making changes - ensure backwards compatibility and avoid breaking changes.
 

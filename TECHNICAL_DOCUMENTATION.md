@@ -1,4 +1,4 @@
-# LenzSupply D2B Platform - Documentación Técnica
+# LeanZupply D2B Platform - Documentación Técnica
 
 ## Índice
 1. [Descripción General](#descripción-general)
@@ -17,7 +17,7 @@
 
 ## Descripción General
 
-**LenzSupply** es una plataforma D2B (Direct-to-Business) que conecta **fabricantes certificados** de Latinoamérica y otras regiones con **empresas compradoras internacionales**. La plataforma facilita el sourcing de productos, coordinación logística y validación de exportaciones en un solo lugar.
+**LeanZupply** es una plataforma D2B (Direct-to-Business) que conecta **fabricantes certificados** de Latinoamérica y otras regiones con **empresas compradoras internacionales**. La plataforma facilita el sourcing de productos, coordinación logística y validación de exportaciones en un solo lugar.
 
 ### Objetivos Principales
 - Simplificar la conexión entre fabricantes y compradores B2B

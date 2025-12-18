@@ -1,4 +1,4 @@
-# 📦 Guía Completa de Migración - LenzSupply D2B Platform
+# 📦 Guía Completa de Migración - LeanZupply D2B Platform
 
 ## 🎯 Objetivo
 Migrar el proyecto completo desde Lovable Cloud a un proyecto de Supabase independiente y desplegarlo en Vercel.

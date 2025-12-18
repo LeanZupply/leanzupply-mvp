@@ -1,4 +1,4 @@
-# 📦 Configuración de Storage - LenzSupply Platform
+# 📦 Configuración de Storage - LeanZupply Platform
 
 ## 🎯 Objetivo
 Configurar los 3 buckets de Storage necesarios para almacenar imágenes de productos, documentos técnicos y documentación de fabricantes.

@@ -1014,7 +1014,7 @@ export default function ProductEdit() {
                               <p>COMISIÓN DEL 12% SE APLICA SOBRE EL PRECIO TOTAL DE VENTA (PRECIO UNITARIO POR CANTIDAD PEDIDA MENOS LOS DESCUENTOS).</p>
                               <p className="italic">Ejemplo: Precio Unitario 250 EUR x 3 unidades = 750 EUR, descuento 1% por cantidad = 742,5€ → Comisión LeanZupply = 89,1 EUR</p>
                               <p className="font-semibold">SE COBRARÁ SÓLO CUANDO SE EFECTÚE LA VENTA.</p>
-                              <p className="text-xs">(Aclaraciones legales y contractuales en Términos y Condiciones de "La Plataforma LenzSupply" con "Usuarios Fabricantes")</p>
+                              <p className="text-xs">(Aclaraciones legales y contractuales en Términos y Condiciones de "La Plataforma LeanZupply" con "Usuarios Fabricantes")</p>
                             </div>
                           </AlertDescription>
                         </Alert>

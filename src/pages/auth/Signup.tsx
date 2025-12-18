@@ -95,10 +95,10 @@ const Signup = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-6">
               <Package2 className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold text-foreground">Leanzupply</span>
+              <span className="text-2xl font-bold text-foreground">LeanZupply</span>
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">
-              Únete a Leanzupply
+              Únete a LeanZupply
             </h1>
             <p className="text-muted-foreground">
               Crea tu cuenta empresarial y comienza a conectar
@@ -205,7 +205,7 @@ const Signup = () => {
         <div className="relative z-10 flex flex-col items-center justify-center w-full p-16 text-white bg-green-950">
           {/* Illustration */}
           <div className="relative w-full max-w-2xl mb-12">
-            <img src={loginIllustration} alt="Leanzupply Platform Illustration" className="w-full h-auto rounded-2xl shadow-2xl" />
+            <img src={loginIllustration} alt="LeanZupply Platform Illustration" className="w-full h-auto rounded-2xl shadow-2xl" />
             
             {/* Floating Elements */}
             <div className="absolute -top-4 -left-4 w-24 h-24 bg-white/10 backdrop-blur-sm rounded-2xl rotate-12 animate-pulse" />

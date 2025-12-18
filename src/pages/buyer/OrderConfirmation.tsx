@@ -10,7 +10,7 @@ export default function OrderConfirmation() {
   const orderId = searchParams.get("orderId");
 
   useEffect(() => {
-    document.title = "Solicitud Recibida - Leanzupply";
+    document.title = "Solicitud Recibida - LeanZupply";
   }, []);
 
   return (

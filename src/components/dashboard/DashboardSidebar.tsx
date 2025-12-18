@@ -98,7 +98,7 @@ export const DashboardSidebar = () => {
             <Package className="h-5 w-5 text-sidebar-background" />
           </div>
           <div className="flex-1">
-            <h2 className="text-sm font-semibold text-sidebar-foreground">Leanzupply</h2>
+            <h2 className="text-sm font-semibold text-sidebar-foreground">LeanZupply</h2>
             <p className="text-xs text-sidebar-foreground/60">{getRoleLabel(profile.role)}</p>
           </div>
         </div>

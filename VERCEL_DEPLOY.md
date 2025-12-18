@@ -1,4 +1,4 @@
-# 🚀 Guía de Deployment en Vercel - LenzSupply Platform
+# 🚀 Guía de Deployment en Vercel - LeanZupply Platform
 
 ## 🎯 Objetivo
 Desplegar la aplicación frontend en Vercel conectada a la base de datos de Supabase.

@@ -81,7 +81,7 @@ Todos los conceptos tienen tooltips con:
 - ✅ **Simulador de cantidad:** Prueba diferentes volúmenes
 - ✅ **Vista previa de costos:** Usa misma lógica que compradores
 - ✅ **Parámetros hardcodeados:** España con valores fijos
-- ✅ **Reminder comisión:** Indica 12% de comisión LenzSupply
+- ✅ **Reminder comisión:** Indica 12% de comisión LeanZupply
 
 ### 6. Guardado de Snapshot en Órdenes
 

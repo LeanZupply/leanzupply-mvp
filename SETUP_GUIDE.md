@@ -1,4 +1,4 @@
-# Guía de Configuración - LenzSupply Platform
+# Guía de Configuración - LeanZupply Platform
 
 Esta guía te llevará paso a paso por la configuración completa del proyecto.
 

@@ -886,7 +886,7 @@ export default function ProductDetail() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
                   <Package className="h-5 w-5 text-primary-foreground" />
                 </div>
-                <span className="text-lg font-bold">Leanzupply</span>
+                <span className="text-lg font-bold">LeanZupply</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 La plataforma D2B que conecta fabricantes certificados con empresas de todo el mundo.
@@ -938,7 +938,7 @@ export default function ProductDetail() {
           <div className="pt-8 border-t border-border">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-sm text-muted-foreground text-center md:text-left">
-                © 2025 Leanzupply. Plataforma D2B para equipamiento industrial.
+                © 2025 LeanZupply. Plataforma D2B para equipamiento industrial.
               </p>
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-xs">
