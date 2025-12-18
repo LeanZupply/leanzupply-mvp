@@ -138,16 +138,15 @@ export default function Checkout() {
   // Handle profile modal completion - retry order submission
   const handleProfileComplete = () => {
     setShowProfileModal(false);
-    // Profile was just updated, need to refetch or use optimistic update
-    // For now, we'll proceed assuming the save was successful
-    handleConfirmOrder();
+    // Skip profile check since we just validated and saved the data in the modal
+    handleConfirmOrder(true);
   };
 
-  const handleConfirmOrder = async () => {
+  const handleConfirmOrder = async (skipProfileCheck = false) => {
     if (!user || !product) return;
 
-    // Check if profile is complete before proceeding
-    if (!isProfileComplete()) {
+    // Check if profile is complete before proceeding (skip if just completed modal)
+    if (!skipProfileCheck && !isProfileComplete()) {
       setShowProfileModal(true);
       return;
     }
