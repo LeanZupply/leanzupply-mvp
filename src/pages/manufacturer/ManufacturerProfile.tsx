@@ -145,8 +145,9 @@ export default function ManufacturerProfile() {
 
     if (uploadError) throw uploadError;
 
-    // Return the file path, not the public URL (bucket is now private)
-    return filePath;
+    // Return the public URL for display
+    const { data } = supabase.storage.from('manufacturer-docs').getPublicUrl(filePath);
+    return data.publicUrl;
   };
 
   const uploadPhoto = async (file: File, folder: string): Promise<string> => {
@@ -160,8 +161,17 @@ export default function ManufacturerProfile() {
 
     if (uploadError) throw uploadError;
 
-    // Return the file path, not the public URL (bucket is now private)
-    return filePath;
+    // Return the public URL for display
+    const { data } = supabase.storage.from('manufacturer-docs').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  // Helper to convert stored paths to public URLs (handles both old paths and new URLs)
+  const getManufacturerDocUrl = (path: string): string => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    const { data } = supabase.storage.from('manufacturer-docs').getPublicUrl(path);
+    return data.publicUrl;
   };
 
   const handlePhotoUpload = async (
@@ -676,7 +686,7 @@ export default function ManufacturerProfile() {
               <Label htmlFor="brand_logo">Logo de la Marca *</Label>
               <div className="flex items-center gap-4">
                 {logoPreview && (
-                  <img src={logoPreview} alt="Logo preview" className="h-20 w-20 object-contain border rounded" />
+                  <img src={getManufacturerDocUrl(logoPreview)} alt="Logo preview" className="h-20 w-20 object-contain border rounded" />
                 )}
                 {(!profileExists || isEditing) && (
                   <Input
@@ -957,7 +967,7 @@ export default function ManufacturerProfile() {
               <div className="grid grid-cols-4 gap-2 mt-2">
                 {photosProductionLines.map((url, idx) => (
                   <div key={idx} className="relative group">
-                    <img src={url} alt="Línea de producción" className="w-full h-24 object-cover rounded border" />
+                    <img src={getManufacturerDocUrl(url)} alt="Línea de producción" className="w-full h-24 object-cover rounded border" />
                     <button
                       type="button"
                       onClick={() => removePhoto(url, photosProductionLines, setPhotosProductionLines)}
@@ -983,7 +993,7 @@ export default function ManufacturerProfile() {
               <div className="grid grid-cols-4 gap-2 mt-2">
                 {photosStaff.map((url, idx) => (
                   <div key={idx} className="relative group">
-                    <img src={url} alt="Personal" className="w-full h-24 object-cover rounded border" />
+                    <img src={getManufacturerDocUrl(url)} alt="Personal" className="w-full h-24 object-cover rounded border" />
                     <button
                       type="button"
                       onClick={() => removePhoto(url, photosStaff, setPhotosStaff)}
@@ -1009,7 +1019,7 @@ export default function ManufacturerProfile() {
               <div className="grid grid-cols-4 gap-2 mt-2">
                 {photosMachinery.map((url, idx) => (
                   <div key={idx} className="relative group">
-                    <img src={url} alt="Maquinaria" className="w-full h-24 object-cover rounded border" />
+                    <img src={getManufacturerDocUrl(url)} alt="Maquinaria" className="w-full h-24 object-cover rounded border" />
                     <button
                       type="button"
                       onClick={() => removePhoto(url, photosMachinery, setPhotosMachinery)}
@@ -1035,7 +1045,7 @@ export default function ManufacturerProfile() {
               <div className="grid grid-cols-4 gap-2 mt-2">
                 {photosWarehouse.map((url, idx) => (
                   <div key={idx} className="relative group">
-                    <img src={url} alt="Almacén" className="w-full h-24 object-cover rounded border" />
+                    <img src={getManufacturerDocUrl(url)} alt="Almacén" className="w-full h-24 object-cover rounded border" />
                     <button
                       type="button"
                       onClick={() => removePhoto(url, photosWarehouse, setPhotosWarehouse)}
@@ -1061,7 +1071,7 @@ export default function ManufacturerProfile() {
               <div className="grid grid-cols-4 gap-2 mt-2">
                 {photosContainerLoading.map((url, idx) => (
                   <div key={idx} className="relative group">
-                    <img src={url} alt="Carga de contenedor" className="w-full h-24 object-cover rounded border" />
+                    <img src={getManufacturerDocUrl(url)} alt="Carga de contenedor" className="w-full h-24 object-cover rounded border" />
                     <button
                       type="button"
                       onClick={() => removePhoto(url, photosContainerLoading, setPhotosContainerLoading)}
