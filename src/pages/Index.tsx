@@ -10,9 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Package, ArrowRight, Factory, ShoppingCart, Search, X, Globe, Shield, Zap, TrendingUp, CheckCircle2 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
+import { trackContactClick } from "@/lib/gtmEvents";
 import { toast } from "sonner";
 import { handleError } from "@/lib/errorHandler";
 import { ProductCard } from "@/components/ProductCard";
+import { Footer } from "@/components/Footer";
 interface Product {
   id: string;
   name: string;
@@ -164,9 +166,13 @@ const Index = () => {
   const uniqueCategories = Array.from(new Set(products.map(p => p.category))).filter(Boolean);
   const uniqueManufacturers = Array.from(new Set(products.map(p => p.manufacturer?.registered_brand).filter(Boolean)));
   const handleCTAClick = (type: "join" | "explore") => {
+    // Track in Supabase analytics
     trackEvent("cta_clicked", {
       cta_type: type
     });
+    // Track in GTM/GA4
+    trackContactClick("cta", type === "join" ? "manufacturer_signup" : "buyer_signup");
+
     if (type === "join") {
       navigate("/auth/signup?role=manufacturer");
     } else {
@@ -584,82 +590,7 @@ const Index = () => {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-border bg-muted/50 px-4 py-12">
-        <div className="container mx-auto">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-8">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-                  <Package className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <span className="text-lg font-bold">LeanZupply</span>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                La plataforma D2B que conecta fabricantes certificados con empresas de todo el mundo.
-              </p>
-            </div>
-            
-            <div className="space-y-4">
-              <h5 className="font-semibold">Plataforma</h5>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <button onClick={() => handleCTAClick("join")} className="hover:text-foreground transition-colors">
-                    Para Fabricantes
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => handleCTAClick("explore")} className="hover:text-foreground transition-colors">
-                    Para Compradores
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => navigate("/auth/signup")} className="hover:text-foreground transition-colors">
-                    Comenzar sin Costes
-                  </button>
-                </li>
-              </ul>
-            </div>
-            
-            <div className="space-y-4">
-              <h5 className="font-semibold">Características</h5>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Verificación de Proveedores</li>
-                <li>Gestión de Pedidos</li>
-                <li>Logística Integrada</li>
-                <li>Pagos Seguros</li>
-              </ul>
-            </div>
-            
-            <div className="space-y-4">
-              <h5 className="font-semibold">Soporte</h5>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Documentación requerida a Compradores</li>
-                <li>Documentación requerida a Fabricantes</li>
-                <li>Incoterm soportado: FOB</li>
-                <li>Términos y Condiciones Generales</li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="pt-8 border-t border-border">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <p className="text-sm text-muted-foreground text-center md:text-left">
-                © 2025 LeanZupply. Plataforma D2B para equipamiento industrial.
-              </p>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">
-                  <Globe className="h-3 w-3 mr-1" />
-                  Operamos globalmente
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  <Shield className="h-3 w-3 mr-1" />
-                  Seguro y confiable
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer onCTAClick={handleCTAClick} />
     </div>;
 };
 export default Index;

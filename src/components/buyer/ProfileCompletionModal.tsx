@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User, Phone, FileText, Building2, AlertCircle, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { trackFormSubmission, FORM_NAMES } from "@/lib/gtmEvents";
 
 interface Profile {
   id: string;
@@ -111,6 +112,9 @@ export function ProfileCompletionModal({
         .eq("id", userId);
 
       if (error) throw error;
+
+      // Track successful profile completion
+      trackFormSubmission(FORM_NAMES.PROFILE_COMPLETION);
 
       toast.success("Perfil actualizado correctamente");
       onComplete();

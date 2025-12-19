@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, Package } from "lucide-react";
+import { trackContactClick } from "@/lib/gtmEvents";
 
 export default function OrderConfirmation() {
   const navigate = useNavigate();
@@ -65,7 +66,11 @@ export default function OrderConfirmation() {
             <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <p className="text-sm text-center">
                 Si tienes alguna consulta, puedes contactarnos en{" "}
-                <a href="mailto:soporte@leanzupply.com" className="font-semibold text-primary hover:underline">
+                <a
+                  href="mailto:soporte@leanzupply.com"
+                  className="font-semibold text-primary hover:underline"
+                  onClick={() => trackContactClick("email", "soporte@leanzupply.com")}
+                >
                   soporte@leanzupply.com
                 </a>
               </p>

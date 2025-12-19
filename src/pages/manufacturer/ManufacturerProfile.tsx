@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Building2, Upload, Loader2, X, Plus, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
 import { Separator } from "@/components/ui/separator";
+import { trackFormSubmission, FORM_NAMES } from "@/lib/gtmEvents";
 import { Progress } from "@/components/ui/progress";
 import { PRODUCT_CATEGORIES } from "@/lib/categories";
 
@@ -324,6 +325,9 @@ export default function ManufacturerProfile() {
         console.error("Database error:", error);
         throw error;
       }
+
+      // Track successful form submission
+      trackFormSubmission(FORM_NAMES.MANUFACTURER_PROFILE);
 
       toast.success("✅ Perfil guardado y enviado para verificación exitosamente", { duration: 5000 });
       setProfileExists(true);

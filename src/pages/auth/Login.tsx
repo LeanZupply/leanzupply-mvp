@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ArrowRight, Package2 } from "lucide-react";
 import loginIllustration from "@/assets/login-illustration.jpg";
 import { getSafeAuthError } from "@/lib/authErrorHandler";
+import { trackFormSubmission, FORM_NAMES } from "@/lib/gtmEvents";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,6 +56,10 @@ const Login = () => {
         password
       });
       if (error) throw error;
+
+      // Track successful login
+      trackFormSubmission(FORM_NAMES.LOGIN);
+
       toast.success("¡Bienvenido de nuevo!");
     } catch (error: any) {
       toast.error(getSafeAuthError(error));

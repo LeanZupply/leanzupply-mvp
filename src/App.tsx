@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { CookieBanner } from "@/components/CookieBanner";
 import { lazy, Suspense } from "react";
 import { LoadingScreen } from "@/components/LoadingScreen";
 
@@ -42,6 +44,10 @@ const Checkout = lazy(() => import("./pages/buyer/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/buyer/OrderConfirmation"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 
+// Lazy load legal pages
+const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
+const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -55,15 +61,20 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth/login" element={<Login />} />
-            <Route path="/auth/signup" element={<Signup />} />
+    <CookieConsentProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth/login" element={<Login />} />
+              <Route path="/auth/signup" element={<Signup />} />
+
+              {/* Legal Pages (Public Routes) */}
+              <Route path="/legal/privacidad" element={<Suspense fallback={<LoadingScreen />}><PrivacyPolicy /></Suspense>} />
+              <Route path="/legal/cookies" element={<Suspense fallback={<LoadingScreen />}><CookiePolicy /></Suspense>} />
             
             {/* Superadmin Routes */}
             <Route path="/superadmin" element={<ProtectedRoute allowedRoles={["superadmin"]}><Suspense fallback={<LoadingScreen />}><SuperadminDashboard /></Suspense></ProtectedRoute>} />
@@ -103,10 +114,12 @@ const App = () => (
             <Route path="/order-confirmation" element={<ProtectedRoute allowedRoles={["buyer"]}><Suspense fallback={<LoadingScreen />}><OrderConfirmation /></Suspense></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+            </Routes>
+            <CookieBanner />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </CookieConsentProvider>
   </QueryClientProvider>
 );
 

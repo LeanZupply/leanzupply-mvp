@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { ArrowRight, Package2 } from "lucide-react";
 import loginIllustration from "@/assets/login-illustration.jpg";
 import { getSafeAuthError } from "@/lib/authErrorHandler";
+import { trackFormSubmission, FORM_NAMES } from "@/lib/gtmEvents";
 const Signup = () => {
   const [formData, setFormData] = useState({
     fullName: "",
@@ -75,6 +76,10 @@ const Signup = () => {
         }
       });
       if (error) throw error;
+
+      // Track successful signup
+      trackFormSubmission(FORM_NAMES.SIGNUP);
+
       toast.success("¡Cuenta creada exitosamente! Ya puedes iniciar sesión.");
       setTimeout(() => navigate("/auth/login"), 2000);
     } catch (error: any) {

@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { handleError } from "@/lib/errorHandler";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { trackFormSubmission, FORM_NAMES } from "@/lib/gtmEvents";
 
 const BuyerProfile = () => {
   const { user, profile } = useAuth();
@@ -93,6 +94,10 @@ const BuyerProfile = () => {
         .eq("id", user.id);
 
       if (error) throw error;
+
+      // Track successful form submission
+      trackFormSubmission(FORM_NAMES.BUYER_PROFILE_PERSONAL);
+
       toast.success("Información personal actualizada");
     } catch (error) {
       const message = handleError("Profile update", error);
@@ -137,6 +142,10 @@ const BuyerProfile = () => {
         .eq("id", user.id);
 
       if (error) throw error;
+
+      // Track successful form submission
+      trackFormSubmission(FORM_NAMES.BUYER_PROFILE_FISCAL);
+
       toast.success("Información fiscal actualizada");
     } catch (error) {
       const message = handleError("Profile update", error);
@@ -179,6 +188,10 @@ const BuyerProfile = () => {
         .eq("id", user.id);
 
       if (error) throw error;
+
+      // Track successful form submission
+      trackFormSubmission(FORM_NAMES.BUYER_PROFILE_DELIVERY);
+
       toast.success("Dirección de entrega actualizada");
     } catch (error) {
       const message = handleError("Profile update", error);

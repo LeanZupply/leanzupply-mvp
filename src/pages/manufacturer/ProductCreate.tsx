@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Package, Loader2, X, AlertCircle, ArrowLeft, Upload, AlertTriangle, Eye } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { trackFormSubmission, FORM_NAMES } from "@/lib/gtmEvents";
 import { PRODUCT_CATEGORIES } from "@/lib/categories";
 import { calculateOrderTotal, getApplicableDiscount } from "@/lib/priceCalculations";
 import { DollarSign } from "lucide-react";
@@ -294,6 +295,10 @@ export default function ProductCreate() {
         console.error("Database error:", error);
         throw error;
       }
+
+      // Track successful product creation
+      trackFormSubmission(FORM_NAMES.PRODUCT_CREATE);
+
       toast.success("Tu producto fue enviado para revisión. Te notificaremos cuando sea aprobado.");
       navigate("/manufacturer/products");
     } catch (error: any) {
