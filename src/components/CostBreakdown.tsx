@@ -414,7 +414,7 @@ export const CostBreakdown = ({
                   <Info className="h-3 w-3" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs">Comisión por servicio de intermediación</p>
+                  <p className="text-xs">Comisión por servicio de facilitación</p>
                 </TooltipContent>
               </Tooltip>
               <span className="font-medium">{formatCurrency(displayValues.buyerFee)}</span>
