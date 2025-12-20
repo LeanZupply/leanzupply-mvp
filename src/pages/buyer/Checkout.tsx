@@ -58,10 +58,8 @@ export default function Checkout() {
     profile
   } = useAuth();
 
-  // Quote mode detection - when ?product={id} query param is present
-  const quoteProductId = searchParams.get('product');
-  const isQuoteMode = !!quoteProductId;
-  const effectiveProductId = isQuoteMode ? quoteProductId : productId;
+  // Quote mode detection - when ?quote=true query param is present
+  const isQuoteMode = searchParams.get('quote') === 'true';
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,14 +99,14 @@ export default function Checkout() {
     if (user) {
       trackStep('checkout_started');
     }
-  }, [user, effectiveProductId, isQuoteMode]);
+  }, [user, productId, isQuoteMode]);
   const fetchProduct = async () => {
-    if (!effectiveProductId) return;
+    if (!productId) return;
     try {
       const {
         data,
         error
-      } = await supabase.from("products").select("*").eq("id", effectiveProductId).eq("status", "active").single();
+      } = await supabase.from("products").select("*").eq("id", productId).eq("status", "active").single();
       if (error) throw error;
 
       // Validar que el producto tenga fabricante
@@ -135,7 +133,7 @@ export default function Checkout() {
     try {
       await supabase.rpc('track_order_step', {
         p_user_id: user?.id || null,
-        p_product_id: effectiveProductId,
+        p_product_id: productId,
         p_order_id: null,
         p_step: step,
         p_session_id: sessionId
@@ -209,7 +207,7 @@ export default function Checkout() {
         const { data: quoteData, error: quoteError } = await supabase
           .from("quote_requests")
           .insert({
-            product_id: effectiveProductId,
+            product_id: productId,
             user_id: isGuest ? null : user!.id,
             email: isGuest ? guestEmail.trim() : (profile?.email || user!.email),
             mobile_phone: isGuest ? guestPhone.trim() : profile?.mobile_phone,
@@ -232,7 +230,7 @@ export default function Checkout() {
 
         // Track GTM events
         trackFormSubmission(FORM_NAMES.QUOTE_REQUEST);
-        trackQuoteRequest(effectiveProductId!, !isGuest);
+        trackQuoteRequest(productId!, !isGuest);
 
         toast.success("¡Solicitud enviada exitosamente!", {
           duration: 5000
@@ -348,7 +346,7 @@ export default function Checkout() {
   });
   return <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        <Button variant="ghost" onClick={() => navigate(`/product/${effectiveProductId}`)} className="mb-4 sm:mb-6" size="sm">
+        <Button variant="ghost" onClick={() => navigate(`/product/${productId}`)} className="mb-4 sm:mb-6" size="sm">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Volver
         </Button>

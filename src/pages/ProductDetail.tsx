@@ -195,7 +195,7 @@ export default function ProductDetail() {
   const handleQuoteRequest = () => {
     if (!user) {
       // Non-authenticated user: go directly to checkout (guest mode)
-      navigate(`/buyer/checkout?product=${id}`);
+      navigate(`/checkout/${id}?quote=true`);
     } else {
       // Authenticated user: check if profile is complete
       const isComplete = profile?.mobile_phone &&
@@ -205,7 +205,7 @@ export default function ProductDetail() {
 
       if (isComplete) {
         // Profile complete: go directly to checkout
-        navigate(`/buyer/checkout?product=${id}`);
+        navigate(`/checkout/${id}?quote=true`);
       } else {
         // Profile incomplete: show ProfileCompletionModal first
         setProfileModalOpen(true);
@@ -216,7 +216,7 @@ export default function ProductDetail() {
   const handleProfileComplete = () => {
     setProfileModalOpen(false);
     // After profile is complete, navigate to checkout
-    navigate(`/buyer/checkout?product=${id}`);
+    navigate(`/checkout/${id}?quote=true`);
   };
 
   const fetchProduct = async () => {
