@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Eye, CheckCircle, XCircle, Clock, Package, Mail, Inbox, Ship, DollarSign } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Eye, CheckCircle, XCircle, Clock, Package, Mail, Inbox, Ship, DollarSign, Phone, FileText, MapPin, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { handleError } from "@/lib/errorHandler";
@@ -53,6 +54,24 @@ interface Order {
   } | null;
 }
 
+interface QuoteRequest {
+  id: string;
+  product_id: string;
+  email: string;
+  mobile_phone: string;
+  tax_id: string;
+  postal_code: string;
+  status: string;
+  is_authenticated: boolean;
+  created_at: string;
+  product: {
+    id: string;
+    name: string;
+    category: string;
+    images: any;
+  } | null;
+}
+
 const ManufacturerOrders = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -63,8 +82,16 @@ const ManufacturerOrders = () => {
   const [rejectedReason, setRejectedReason] = useState("");
   const [processing, setProcessing] = useState(false);
 
+  // Quote requests state
+  const [quoteRequests, setQuoteRequests] = useState<QuoteRequest[]>([]);
+  const [selectedQuoteRequest, setSelectedQuoteRequest] = useState<QuoteRequest | null>(null);
+  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
+
   useEffect(() => {
-    if (user) fetchOrders();
+    if (user) {
+      fetchOrders();
+      fetchQuoteRequests();
+    }
   }, [user]);
 
   const fetchOrders = async () => {
@@ -91,6 +118,40 @@ const ManufacturerOrders = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchQuoteRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("quote_requests")
+        .select(`
+          id, product_id, email, mobile_phone, tax_id, postal_code,
+          status, is_authenticated, created_at,
+          product:products(id, name, category, images)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setQuoteRequests(data || []);
+    } catch (error) {
+      const message = handleError("Quote requests fetch", error);
+      toast.error(message);
+    }
+  };
+
+  const handleViewQuoteDetails = (quote: QuoteRequest) => {
+    setSelectedQuoteRequest(quote);
+    setQuoteDialogOpen(true);
+  };
+
+  const getQuoteStatusConfig = (status: string) => {
+    const configs: Record<string, { color: string; label: string }> = {
+      pending: { color: "bg-warning/10 text-warning border-warning/20", label: "Pendiente" },
+      contacted: { color: "bg-blue-500/10 text-blue-600 border-blue-500/20", label: "Contactado" },
+      completed: { color: "bg-success/10 text-success border-success/20", label: "Completado" },
+      cancelled: { color: "bg-muted text-muted-foreground border-muted", label: "Cancelado" },
+    };
+    return configs[status] || configs.pending;
   };
 
   const handleViewDetails = (order: Order) => {
@@ -212,14 +273,27 @@ const ManufacturerOrders = () => {
   return (
     <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-semibold text-foreground">Pedidos Recibidos</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold text-foreground">Pedidos y Solicitudes</h1>
         <p className="text-sm md:text-base text-muted-foreground mt-2">
-          Gestiona las solicitudes de compra de clientes potenciales
+          Gestiona pedidos y solicitudes de informacion de clientes potenciales
         </p>
       </div>
 
-      <div className="grid gap-4">
-        {orders.map((order) => {
+      <Tabs defaultValue="orders" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="orders" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Pedidos ({orders.length})
+          </TabsTrigger>
+          <TabsTrigger value="quotes" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            Solicitudes ({quoteRequests.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="orders" className="mt-6">
+          <div className="grid gap-4">
+            {orders.map((order) => {
           const statusConfig = getStatusConfig(order.status);
           const StatusIcon = statusConfig.icon;
 
@@ -283,18 +357,101 @@ const ManufacturerOrders = () => {
                 </div>
               </CardContent>
             </Card>
-          );
-        })}
+              );
+            })}
 
-        {orders.length === 0 && (
-          <Card className="border-border">
-            <CardContent className="py-16 text-center">
-              <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground text-lg">No hay pedidos aún</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+            {orders.length === 0 && (
+              <Card className="border-border">
+                <CardContent className="py-16 text-center">
+                  <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground text-lg">No hay pedidos aun</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="quotes" className="mt-6">
+          <div className="grid gap-4">
+            {quoteRequests.map((quote) => {
+              const statusConfig = getQuoteStatusConfig(quote.status);
+              return (
+                <Card key={quote.id} className="border-border hover:shadow-lg transition-shadow">
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col md:flex-row justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg text-foreground">
+                              {quote.product?.name || "Producto"}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {quote.email}
+                            </p>
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                              <Phone className="h-3 w-3" />
+                              {quote.mobile_phone}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge className={`${statusConfig.color} border shrink-0`}>
+                              {statusConfig.label}
+                            </Badge>
+                            {quote.is_authenticated && (
+                              <Badge variant="outline" className="text-xs">
+                                Usuario registrado
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm pt-3">
+                          <div>
+                            <p className="text-muted-foreground text-xs">NIF/CIF/VAT-ID</p>
+                            <p className="font-semibold text-foreground">{quote.tax_id}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground text-xs">Codigo Postal</p>
+                            <p className="font-semibold text-foreground">{quote.postal_code}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground text-xs">Fecha</p>
+                            <p className="font-semibold text-foreground">
+                              {new Date(quote.created_at).toLocaleDateString("es-ES")}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex md:flex-col gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewQuoteDetails(quote)}
+                          className="flex-1 md:flex-initial"
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          Ver Detalle
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+
+            {quoteRequests.length === 0 && (
+              <Card className="border-border">
+                <CardContent className="py-16 text-center">
+                  <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground text-lg">No hay solicitudes de informacion aun</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Details Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -572,6 +729,135 @@ const ManufacturerOrders = () => {
                   </CardContent>
                 </Card>
               )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Quote Request Details Dialog */}
+      <Dialog open={quoteDialogOpen} onOpenChange={setQuoteDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Solicitud de Informacion
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedQuoteRequest && (
+            <div className="space-y-4">
+              {/* Product Info */}
+              <Card className="bg-surface border-border">
+                <CardContent className="pt-6">
+                  <div className="flex gap-4">
+                    {selectedQuoteRequest.product?.images && Array.isArray(selectedQuoteRequest.product.images) && selectedQuoteRequest.product.images.length > 0 && (
+                      <img
+                        src={selectedQuoteRequest.product.images[0]}
+                        alt={selectedQuoteRequest.product.name}
+                        className="w-20 h-20 object-cover rounded-lg border"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <Label className="text-muted-foreground text-xs">Producto</Label>
+                      <p className="font-semibold text-lg text-foreground">
+                        {selectedQuoteRequest.product?.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedQuoteRequest.product?.category}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Contact Info */}
+              <Card className="bg-surface border-border">
+                <CardContent className="pt-6 space-y-4">
+                  <h4 className="font-semibold text-foreground">Datos de Contacto</h4>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="flex items-center gap-3">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <Label className="text-muted-foreground text-xs">Email</Label>
+                        <p className="font-medium text-foreground">{selectedQuoteRequest.email}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <Label className="text-muted-foreground text-xs">Telefono con WhatsApp</Label>
+                        <p className="font-medium text-foreground">{selectedQuoteRequest.mobile_phone}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <Label className="text-muted-foreground text-xs">NIF / CIF / NIE / DNI / VAT-ID</Label>
+                        <p className="font-medium text-foreground">{selectedQuoteRequest.tax_id}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <Label className="text-muted-foreground text-xs">Codigo Postal</Label>
+                        <p className="font-medium text-foreground">{selectedQuoteRequest.postal_code}</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Request Info */}
+              <Card className="bg-surface border-border">
+                <CardContent className="pt-6 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <Label className="text-muted-foreground text-xs">Fecha de solicitud</Label>
+                      <p className="font-medium text-foreground">
+                        {new Date(selectedQuoteRequest.created_at).toLocaleString("es-ES")}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <Label className="text-muted-foreground text-xs">Estado</Label>
+                      <Badge className={`${getQuoteStatusConfig(selectedQuoteRequest.status).color} border mt-1`}>
+                        {getQuoteStatusConfig(selectedQuoteRequest.status).label}
+                      </Badge>
+                    </div>
+                  </div>
+                  {selectedQuoteRequest.is_authenticated && (
+                    <Badge variant="outline" className="text-xs">
+                      Usuario registrado en plataforma
+                    </Badge>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => window.open(`mailto:${selectedQuoteRequest.email}?subject=Informacion sobre ${selectedQuoteRequest.product?.name || 'producto'}`, '_blank')}
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  Enviar Email
+                </Button>
+                <Button
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    const phone = selectedQuoteRequest.mobile_phone.replace(/[^0-9+]/g, '');
+                    const message = encodeURIComponent(`Hola, he recibido tu solicitud de informacion sobre ${selectedQuoteRequest.product?.name || 'nuestro producto'}. Estoy disponible para darte mas detalles.`);
+                    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+                  }}
+                >
+                  <Phone className="mr-2 h-4 w-4" />
+                  WhatsApp
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
