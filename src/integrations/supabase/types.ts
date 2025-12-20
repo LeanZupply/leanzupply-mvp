@@ -847,6 +847,73 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          email: string
+          id: string
+          is_authenticated: boolean
+          mobile_phone: string
+          postal_code: string
+          product_id: string
+          status: string
+          tax_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          is_authenticated?: boolean
+          mobile_phone: string
+          postal_code: string
+          product_id: string
+          status?: string
+          tax_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          is_authenticated?: boolean
+          mobile_phone?: string
+          postal_code?: string
+          product_id?: string
+          status?: string
+          tax_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_manufacturer_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           created_at: string | null

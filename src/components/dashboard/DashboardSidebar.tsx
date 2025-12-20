@@ -40,6 +40,7 @@ import {
   Ship,
   MapPin,
   PackageCheck,
+  MessageSquare,
 } from "lucide-react";
 
 const navigationMap = {
@@ -48,6 +49,7 @@ const navigationMap = {
     { title: "Usuarios", icon: Users, url: "/superadmin/users" },
     { title: "Productos", icon: Package, url: "/superadmin/products" },
     { title: "Órdenes", icon: ShoppingCart, url: "/superadmin/orders" },
+    { title: "Solicitudes", icon: MessageSquare, url: "/superadmin/quote-requests" },
     { title: "Documentos", icon: FileText, url: "/superadmin/documents" },
     { title: "Análisis", icon: LineChart, url: "/superadmin/analytics" },
     { title: "Funnel", icon: TrendingUp, url: "/superadmin/funnel" },

@@ -33,11 +33,15 @@ import {
   Globe,
   Plus,
   Minus,
+  MessageSquare,
 } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
 import { ProductCard } from "@/components/ProductCard";
 import { CostBreakdown } from "@/components/CostBreakdown";
 import { calculateOrderTotal } from "@/lib/priceCalculations";
+import { QuoteRequestModal } from "@/components/QuoteRequestModal";
+import { ProfileCompletionModal } from "@/components/buyer/ProfileCompletionModal";
+import { trackFormSubmission, FORM_NAMES, trackQuoteRequest } from "@/lib/gtmEvents";
 import {
   Carousel,
   CarouselContent,
@@ -111,6 +115,8 @@ export default function ProductDetail() {
   const [orderQuantity, setOrderQuantity] = useState(1);
   const [costQuantity, setCostQuantity] = useState(1);
   const [deliveryTimeline, setDeliveryTimeline] = useState<any>(null);
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   const [sessionId] = useState(() => {
     let sid = sessionStorage.getItem('session_id');
@@ -179,7 +185,7 @@ export default function ProductDetail() {
 
   const handleMakeOrder = () => {
     trackOrderClick();
-    
+
     if (!user) {
       // Redirect to signup with return path
       navigate(`/auth/signup?redirect_to=/checkout/${id}`);
@@ -187,6 +193,60 @@ export default function ProductDetail() {
       // Go directly to checkout
       navigate(`/checkout/${id}`);
     }
+  };
+
+  const handleQuoteRequest = async () => {
+    if (!user) {
+      // Non-authenticated user: show quote request modal
+      setQuoteModalOpen(true);
+    } else {
+      // Authenticated user: check if profile is complete
+      const isComplete = profile?.mobile_phone &&
+                         profile?.tax_id &&
+                         profile?.postal_code;
+
+      if (isComplete) {
+        // Profile complete: create quote request directly
+        await createAuthQuoteRequest();
+      } else {
+        // Profile incomplete: show ProfileCompletionModal
+        setProfileModalOpen(true);
+      }
+    }
+  };
+
+  const createAuthQuoteRequest = async () => {
+    if (!user || !id) return;
+
+    try {
+      const { error } = await supabase.from("quote_requests").insert({
+        product_id: id,
+        user_id: user.id,
+        email: profile?.email || user.email,
+        mobile_phone: profile?.mobile_phone,
+        tax_id: profile?.tax_id,
+        postal_code: profile?.postal_code,
+        is_authenticated: true,
+        status: "pending",
+      });
+
+      if (error) throw error;
+
+      // Track GTM events
+      trackFormSubmission(FORM_NAMES.QUOTE_REQUEST);
+      trackQuoteRequest(id, true);
+
+      toast.success("Solicitud enviada correctamente. Te contactaremos pronto.");
+    } catch (error: any) {
+      console.error("Error creating quote request:", error);
+      toast.error(error.message || "Error al enviar la solicitud");
+    }
+  };
+
+  const handleProfileComplete = async () => {
+    setProfileModalOpen(false);
+    // After profile is complete, create the quote request
+    await createAuthQuoteRequest();
   };
 
   const fetchProduct = async () => {
@@ -779,14 +839,14 @@ export default function ProductDetail() {
               />
             )}
 
-            {/* Botón Hacer Pedido */}
+            {/* Botón Pedir Información */}
             <Button
               size="lg"
               className="w-full"
-              onClick={handleMakeOrder}
+              onClick={handleQuoteRequest}
             >
-              <ShoppingCart className="h-5 w-5 mr-2" />
-              {user ? "Hacer Pedido" : "Hacer Pedido (Registrarse)"}
+              <MessageSquare className="h-5 w-5 mr-2" />
+              Pedir Información
             </Button>
 
             {/* Badges de Seguridad */}
@@ -922,6 +982,24 @@ export default function ProductDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Quote Request Modal (for non-authenticated users) */}
+      <QuoteRequestModal
+        open={quoteModalOpen}
+        onClose={() => setQuoteModalOpen(false)}
+        onComplete={() => setQuoteModalOpen(false)}
+        productId={product.id}
+        productName={product.name}
+      />
+
+      {/* Profile Completion Modal (for authenticated users with incomplete profile) */}
+      <ProfileCompletionModal
+        open={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        onComplete={handleProfileComplete}
+        profile={profile}
+        userId={user?.id || ""}
+      />
     </div>
   );
 }

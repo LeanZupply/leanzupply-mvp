@@ -60,4 +60,22 @@ export const FORM_NAMES = {
   PRODUCT_EDIT: "product_edit",
   PROFILE_COMPLETION: "profile_completion",
   ORDER_CHECKOUT: "order_checkout",
+  QUOTE_REQUEST: "quote_request",
 } as const;
+
+/**
+ * Track quote request events
+ * @param productId - The product ID for the quote request
+ * @param isAuthenticated - Whether the user was logged in
+ */
+export const trackQuoteRequest = (
+  productId: string,
+  isAuthenticated: boolean
+): void => {
+  pushToDataLayer({
+    event: "quote_request",
+    product_id: productId,
+    is_authenticated: isAuthenticated,
+    page_location: window.location.pathname,
+  });
+};

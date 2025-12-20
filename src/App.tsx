@@ -22,6 +22,7 @@ const SuperadminOverview = lazy(() => import("./pages/superadmin/SuperadminOverv
 const SuperadminUsers = lazy(() => import("./pages/superadmin/SuperadminUsers"));
 const SuperadminProducts = lazy(() => import("./pages/superadmin/SuperadminProducts"));
 const SuperadminOrders = lazy(() => import("./pages/superadmin/SuperadminOrders"));
+const SuperadminQuoteRequests = lazy(() => import("./pages/superadmin/SuperadminQuoteRequests"));
 const SuperadminDocuments = lazy(() => import("./pages/superadmin/SuperadminDocuments"));
 const SuperadminAnalytics = lazy(() => import("./pages/superadmin/SuperadminAnalytics"));
 const SuperadminFunnel = lazy(() => import("./pages/superadmin/SuperadminFunnel"));
@@ -82,6 +83,7 @@ const App = () => (
             <Route path="/superadmin/users" element={<ProtectedRoute allowedRoles={["superadmin"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><SuperadminUsers /></Suspense></DashboardLayout></ProtectedRoute>} />
             <Route path="/superadmin/products" element={<ProtectedRoute allowedRoles={["superadmin"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><SuperadminProducts /></Suspense></DashboardLayout></ProtectedRoute>} />
             <Route path="/superadmin/orders" element={<ProtectedRoute allowedRoles={["superadmin"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><SuperadminOrders /></Suspense></DashboardLayout></ProtectedRoute>} />
+            <Route path="/superadmin/quote-requests" element={<ProtectedRoute allowedRoles={["superadmin"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><SuperadminQuoteRequests /></Suspense></DashboardLayout></ProtectedRoute>} />
             <Route path="/superadmin/documents" element={<ProtectedRoute allowedRoles={["superadmin"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><SuperadminDocuments /></Suspense></DashboardLayout></ProtectedRoute>} />
             <Route path="/superadmin/analytics" element={<ProtectedRoute allowedRoles={["superadmin"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><SuperadminAnalytics /></Suspense></DashboardLayout></ProtectedRoute>} />
             <Route path="/superadmin/funnel" element={<ProtectedRoute allowedRoles={["superadmin"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><SuperadminFunnel /></Suspense></DashboardLayout></ProtectedRoute>} />
