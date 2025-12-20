@@ -101,7 +101,7 @@ export default function OrderConfirmation() {
                 </Button>
               )}
               <Button
-                onClick={() => navigate("/buyer/catalog")}
+                onClick={() => navigate("/")}
                 variant={isQuoteMode ? "default" : "outline"}
                 className="flex-1"
                 size="lg"

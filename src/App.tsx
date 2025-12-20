@@ -111,9 +111,9 @@ const App = () => (
             <Route path="/buyer/profile" element={<ProtectedRoute allowedRoles={["buyer"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><BuyerProfile /></Suspense></DashboardLayout></ProtectedRoute>} />
             <Route path="/buyer/notifications" element={<ProtectedRoute allowedRoles={["buyer"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><BuyerNotifications /></Suspense></DashboardLayout></ProtectedRoute>} />
             
-            {/* Checkout Flow (requires auth) */}
-            <Route path="/checkout/:productId" element={<ProtectedRoute allowedRoles={["buyer"]}><Suspense fallback={<LoadingScreen />}><Checkout /></Suspense></ProtectedRoute>} />
-            <Route path="/order-confirmation" element={<ProtectedRoute allowedRoles={["buyer"]}><Suspense fallback={<LoadingScreen />}><OrderConfirmation /></Suspense></ProtectedRoute>} />
+            {/* Checkout Flow - handles auth internally (allows guests for quote mode) */}
+            <Route path="/checkout/:productId" element={<Suspense fallback={<LoadingScreen />}><Checkout /></Suspense>} />
+            <Route path="/order-confirmation" element={<Suspense fallback={<LoadingScreen />}><OrderConfirmation /></Suspense>} />
 
             <Route path="*" element={<NotFound />} />
             </Routes>
