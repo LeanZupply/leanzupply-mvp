@@ -9,10 +9,14 @@ export default function OrderConfirmation() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get("orderId");
+  const quoteId = searchParams.get("quoteId");
+  const isQuoteMode = !!quoteId;
 
   useEffect(() => {
-    document.title = "Solicitud Recibida - LeanZupply";
-  }, []);
+    document.title = isQuoteMode
+      ? "Solicitud Enviada - LeanZupply"
+      : "Solicitud Recibida - LeanZupply";
+  }, [isQuoteMode]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
@@ -22,9 +26,14 @@ export default function OrderConfirmation() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 dark:bg-green-900/20 rounded-full mb-4">
             <AlertTriangle className="h-12 w-12 text-green-600 dark:text-green-400" />
           </div>
-          <h1 className="text-4xl font-bold mb-2">¡Solicitud Recibida!</h1>
+          <h1 className="text-4xl font-bold mb-2">
+            {isQuoteMode ? "¡Solicitud Enviada!" : "¡Solicitud Recibida!"}
+          </h1>
           <p className="text-xl text-muted-foreground">
-            Gracias por el interés, estás en buenas manos.
+            {isQuoteMode
+              ? "Tu solicitud de propuesta final ha sido enviada. Te contactaremos pronto."
+              : "Gracias por el interés, estás en buenas manos."
+            }
           </p>
         </div>
 
@@ -33,11 +42,14 @@ export default function OrderConfirmation() {
           <CardContent className="p-8 space-y-6">
             <div className="text-center space-y-2">
               <p className="text-lg">
-                Hemos registrado tu solicitud y nuestro equipo verificará disponibilidad, condiciones de fabricación y costes logísticos con los proveedores correspondiente.
+                {isQuoteMode
+                  ? "Hemos registrado tu solicitud de propuesta. Nuestro equipo revisará los detalles y te contactará con la información solicitada."
+                  : "Hemos registrado tu solicitud y nuestro equipo verificará disponibilidad, condiciones de fabricación y costes logísticos con los proveedores correspondiente."
+                }
               </p>
-              {orderId && (
+              {(orderId || quoteId) && (
                 <p className="text-sm text-muted-foreground">
-                  ID de solicitud: <span className="font-mono font-semibold">{orderId}</span>
+                  ID de solicitud: <span className="font-mono font-semibold">{orderId || quoteId}</span>
                 </p>
               )}
             </div>
@@ -78,21 +90,23 @@ export default function OrderConfirmation() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <Button
-                onClick={() => navigate("/buyer/orders")}
-                className="flex-1"
-                size="lg"
-              >
-                <Package className="h-4 w-4 mr-2" />
-                Ver Mis Pedidos
-              </Button>
+              {!isQuoteMode && (
+                <Button
+                  onClick={() => navigate("/buyer/orders")}
+                  className="flex-1"
+                  size="lg"
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  Ver Mis Pedidos
+                </Button>
+              )}
               <Button
                 onClick={() => navigate("/buyer/catalog")}
-                variant="outline"
+                variant={isQuoteMode ? "default" : "outline"}
                 className="flex-1"
                 size="lg"
               >
-                Seguir Explorando
+                {isQuoteMode ? "Ver Catálogo" : "Seguir Explorando"}
               </Button>
             </div>
           </CardContent>

@@ -39,9 +39,7 @@ import { handleError } from "@/lib/errorHandler";
 import { ProductCard } from "@/components/ProductCard";
 import { CostBreakdown } from "@/components/CostBreakdown";
 import { calculateOrderTotal } from "@/lib/priceCalculations";
-import { QuoteRequestModal } from "@/components/QuoteRequestModal";
 import { ProfileCompletionModal } from "@/components/buyer/ProfileCompletionModal";
-import { trackFormSubmission, FORM_NAMES, trackQuoteRequest } from "@/lib/gtmEvents";
 import {
   Carousel,
   CarouselContent,
@@ -115,7 +113,6 @@ export default function ProductDetail() {
   const [orderQuantity, setOrderQuantity] = useState(1);
   const [costQuantity, setCostQuantity] = useState(1);
   const [deliveryTimeline, setDeliveryTimeline] = useState<any>(null);
-  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   const [sessionId] = useState(() => {
@@ -195,58 +192,31 @@ export default function ProductDetail() {
     }
   };
 
-  const handleQuoteRequest = async () => {
+  const handleQuoteRequest = () => {
     if (!user) {
-      // Non-authenticated user: show quote request modal
-      setQuoteModalOpen(true);
+      // Non-authenticated user: go directly to checkout (guest mode)
+      navigate(`/buyer/checkout?product=${id}`);
     } else {
       // Authenticated user: check if profile is complete
       const isComplete = profile?.mobile_phone &&
                          profile?.tax_id &&
-                         profile?.postal_code;
+                         profile?.postal_code &&
+                         profile?.is_professional_business === true;
 
       if (isComplete) {
-        // Profile complete: create quote request directly
-        await createAuthQuoteRequest();
+        // Profile complete: go directly to checkout
+        navigate(`/buyer/checkout?product=${id}`);
       } else {
-        // Profile incomplete: show ProfileCompletionModal
+        // Profile incomplete: show ProfileCompletionModal first
         setProfileModalOpen(true);
       }
     }
   };
 
-  const createAuthQuoteRequest = async () => {
-    if (!user || !id) return;
-
-    try {
-      const { error } = await supabase.from("quote_requests").insert({
-        product_id: id,
-        user_id: user.id,
-        email: profile?.email || user.email,
-        mobile_phone: profile?.mobile_phone,
-        tax_id: profile?.tax_id,
-        postal_code: profile?.postal_code,
-        is_authenticated: true,
-        status: "pending",
-      });
-
-      if (error) throw error;
-
-      // Track GTM events
-      trackFormSubmission(FORM_NAMES.QUOTE_REQUEST);
-      trackQuoteRequest(id, true);
-
-      toast.success("Solicitud enviada correctamente. Te contactaremos pronto.");
-    } catch (error: any) {
-      console.error("Error creating quote request:", error);
-      toast.error(error.message || "Error al enviar la solicitud");
-    }
-  };
-
-  const handleProfileComplete = async () => {
+  const handleProfileComplete = () => {
     setProfileModalOpen(false);
-    // After profile is complete, create the quote request
-    await createAuthQuoteRequest();
+    // After profile is complete, navigate to checkout
+    navigate(`/buyer/checkout?product=${id}`);
   };
 
   const fetchProduct = async () => {
@@ -982,15 +952,6 @@ export default function ProductDetail() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Quote Request Modal (for non-authenticated users) */}
-      <QuoteRequestModal
-        open={quoteModalOpen}
-        onClose={() => setQuoteModalOpen(false)}
-        onComplete={() => setQuoteModalOpen(false)}
-        productId={product.id}
-        productName={product.name}
-      />
 
       {/* Profile Completion Modal (for authenticated users with incomplete profile) */}
       <ProfileCompletionModal

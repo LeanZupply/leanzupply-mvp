@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { trackFormSubmission, FORM_NAMES, trackQuoteRequest } from "@/lib/gtmEvents";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -49,11 +51,18 @@ export default function Checkout() {
   const {
     productId
   } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const {
     user,
     profile
   } = useAuth();
+
+  // Quote mode detection - when ?product={id} query param is present
+  const quoteProductId = searchParams.get('product');
+  const isQuoteMode = !!quoteProductId;
+  const effectiveProductId = isQuoteMode ? quoteProductId : productId;
+
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -66,6 +75,13 @@ export default function Checkout() {
   const [localShippingCalc, setLocalShippingCalc] = useState<LocalShippingCalculation | null>(null);
   const [internationalCost, setInternationalCost] = useState(0);
   const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Guest form state (for non-authenticated users in quote mode)
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestTaxId, setGuestTaxId] = useState("");
+  const [guestPostalCode, setGuestPostalCode] = useState("");
+  const [guestAcceptedTerms, setGuestAcceptedTerms] = useState(false);
   const [sessionId] = useState(() => {
     let sid = sessionStorage.getItem('session_id');
     if (!sid) {
@@ -75,20 +91,24 @@ export default function Checkout() {
     return sid;
   });
   useEffect(() => {
-    // Redirect if not logged in
-    if (!user) {
+    // For quote mode, allow guests (don't redirect)
+    // For normal checkout, redirect if not logged in
+    if (!user && !isQuoteMode) {
       navigate(`/auth/signup?redirect_to=/checkout/${productId}`);
       return;
     }
     fetchProduct();
-    trackStep('checkout_started');
-  }, [user, productId]);
+    if (user) {
+      trackStep('checkout_started');
+    }
+  }, [user, effectiveProductId, isQuoteMode]);
   const fetchProduct = async () => {
+    if (!effectiveProductId) return;
     try {
       const {
         data,
         error
-      } = await supabase.from("products").select("*").eq("id", productId).eq("status", "active").single();
+      } = await supabase.from("products").select("*").eq("id", effectiveProductId).eq("status", "active").single();
       if (error) throw error;
 
       // Validar que el producto tenga fabricante
@@ -115,7 +135,7 @@ export default function Checkout() {
     try {
       await supabase.rpc('track_order_step', {
         p_user_id: user?.id || null,
-        p_product_id: productId,
+        p_product_id: effectiveProductId,
         p_order_id: null,
         p_step: step,
         p_session_id: sessionId
@@ -135,6 +155,21 @@ export default function Checkout() {
     );
   };
 
+  // Validate guest form
+  const isGuestFormValid = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\+?[\d\s\-]{9,20}$/;
+    const postalCodeRegex = /^\d{4,10}$/;
+
+    return (
+      emailRegex.test(guestEmail.trim()) &&
+      phoneRegex.test(guestPhone.trim()) &&
+      guestTaxId.trim().length >= 5 &&
+      postalCodeRegex.test(guestPostalCode.trim()) &&
+      guestAcceptedTerms
+    );
+  };
+
   // Handle profile modal completion - retry order submission
   const handleProfileComplete = () => {
     setShowProfileModal(false);
@@ -143,7 +178,77 @@ export default function Checkout() {
   };
 
   const handleConfirmOrder = async (skipProfileCheck = false) => {
-    if (!user || !product) return;
+    if (!product) return;
+
+    // Quote mode handling
+    if (isQuoteMode) {
+      const isGuest = !user;
+
+      // For guests, validate the guest form
+      if (isGuest) {
+        if (!isGuestFormValid()) {
+          toast.error("Por favor completa todos los campos correctamente");
+          return;
+        }
+      } else {
+        // For authenticated users, check profile completion
+        if (!skipProfileCheck && !isProfileComplete()) {
+          setShowProfileModal(true);
+          return;
+        }
+      }
+
+      if (quantity < product.moq) {
+        toast.error(`La cantidad mínima es ${product.moq} unidades`);
+        return;
+      }
+
+      setSubmitting(true);
+      try {
+        // Create quote request
+        const { data: quoteData, error: quoteError } = await supabase
+          .from("quote_requests")
+          .insert({
+            product_id: effectiveProductId,
+            user_id: isGuest ? null : user!.id,
+            email: isGuest ? guestEmail.trim() : (profile?.email || user!.email),
+            mobile_phone: isGuest ? guestPhone.trim() : profile?.mobile_phone,
+            tax_id: isGuest ? guestTaxId.trim().toUpperCase() : profile?.tax_id,
+            postal_code: isGuest ? guestPostalCode.trim() : profile?.postal_code,
+            is_authenticated: !isGuest,
+            status: "pending",
+            quantity: quantity,
+            notes: notes || null,
+            destination_port: selectedDestinationPort || null,
+            calculation_snapshot: calculationSnapshot,
+          })
+          .select()
+          .single();
+
+        if (quoteError) {
+          console.error("Quote request creation error:", quoteError);
+          throw new Error(quoteError.message || "No se pudo crear la solicitud");
+        }
+
+        // Track GTM events
+        trackFormSubmission(FORM_NAMES.QUOTE_REQUEST);
+        trackQuoteRequest(effectiveProductId!, !isGuest);
+
+        toast.success("¡Solicitud enviada exitosamente!", {
+          duration: 5000
+        });
+        navigate(`/order-confirmation?quoteId=${quoteData.id}`);
+      } catch (error: any) {
+        console.error("Error creating quote request:", error);
+        toast.error(error.message || "Error al enviar la solicitud. Por favor intenta de nuevo.");
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
+    // Normal checkout flow (not quote mode) - requires authentication
+    if (!user) return;
 
     // Check if profile is complete before proceeding (skip if just completed modal)
     if (!skipProfileCheck && !isProfileComplete()) {
@@ -243,12 +348,14 @@ export default function Checkout() {
   });
   return <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        <Button variant="ghost" onClick={() => navigate(`/product/${productId}`)} className="mb-4 sm:mb-6" size="sm">
+        <Button variant="ghost" onClick={() => navigate(`/product/${effectiveProductId}`)} className="mb-4 sm:mb-6" size="sm">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Volver
         </Button>
 
-        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Confirmar Pedido</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">
+          {isQuoteMode ? "Solicitud de Propuesta Final" : "Confirmar Pedido"}
+        </h1>
 
         <div className="space-y-6 sm:space-y-8">
           {/* Product Summary */}
@@ -356,9 +463,91 @@ export default function Checkout() {
 
               <Separator />
 
-              
+
             </CardContent>
           </Card>
+
+          {/* Guest Contact Form - Only shown for non-authenticated users in quote mode */}
+          {isQuoteMode && !user && (
+            <Card>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Datos de Contacto
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 p-4 sm:p-6">
+                <p className="text-sm text-muted-foreground">
+                  Introduce tus datos para que podamos enviarte la propuesta comercial.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="guest-email">Email *</Label>
+                    <Input
+                      id="guest-email"
+                      type="email"
+                      placeholder="tu@empresa.com"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="guest-phone">Teléfono móvil con WhatsApp *</Label>
+                    <Input
+                      id="guest-phone"
+                      type="tel"
+                      placeholder="+34 600 123 456"
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="guest-taxid">NIF/CIF/NIE/DNI/VAT-ID *</Label>
+                    <Input
+                      id="guest-taxid"
+                      type="text"
+                      placeholder="B12345678"
+                      value={guestTaxId}
+                      onChange={(e) => setGuestTaxId(e.target.value.toUpperCase())}
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="guest-postal">Código Postal *</Label>
+                    <Input
+                      id="guest-postal"
+                      type="text"
+                      placeholder="28001"
+                      value={guestPostalCode}
+                      onChange={(e) => setGuestPostalCode(e.target.value)}
+                      className="mt-2"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 pt-2">
+                  <Checkbox
+                    id="guest-terms"
+                    checked={guestAcceptedTerms}
+                    onCheckedChange={(checked) => setGuestAcceptedTerms(checked === true)}
+                  />
+                  <Label htmlFor="guest-terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+                    Declaro que los datos proporcionados corresponden a una empresa legalmente registrada y activa, y acepto los{" "}
+                    <a href="/terms" className="text-primary underline hover:no-underline" target="_blank">
+                      términos y condiciones
+                    </a>{" "}
+                    y la{" "}
+                    <a href="/privacy" className="text-primary underline hover:no-underline" target="_blank">
+                      política de privacidad
+                    </a>.
+                  </Label>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Envío Internacional - Siempre incluido */}
           <CostBreakdown productId={product.id} quantity={quantity} destinationCountry="spain" originPort={originPort || undefined} realTime={true} onCalculationComplete={calc => {
@@ -511,8 +700,23 @@ export default function Checkout() {
                   </CardContent>
                 </Card>}
 
-              <Button className="w-full" size="lg" onClick={handleConfirmOrder} disabled={submitting || quantity < product.moq || totalCost === 0}>
-                {submitting ? "Enviando solicitud..." : "Solicitar Propuesta Final"}
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={() => handleConfirmOrder()}
+                disabled={
+                  submitting ||
+                  quantity < product.moq ||
+                  totalCost === 0 ||
+                  (isQuoteMode && !user && !isGuestFormValid())
+                }
+              >
+                {submitting
+                  ? "Enviando solicitud..."
+                  : isQuoteMode
+                    ? "Solicitar Propuesta"
+                    : "Solicitar Propuesta Final"
+                }
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">

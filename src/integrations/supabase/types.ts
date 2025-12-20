@@ -850,13 +850,17 @@ export type Database = {
       quote_requests: {
         Row: {
           admin_notes: string | null
+          calculation_snapshot: Json | null
           created_at: string
+          destination_port: string | null
           email: string
           id: string
           is_authenticated: boolean
           mobile_phone: string
+          notes: string | null
           postal_code: string
           product_id: string
+          quantity: number | null
           status: string
           tax_id: string
           updated_at: string
@@ -864,13 +868,17 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          calculation_snapshot?: Json | null
           created_at?: string
+          destination_port?: string | null
           email: string
           id?: string
           is_authenticated?: boolean
           mobile_phone: string
+          notes?: string | null
           postal_code: string
           product_id: string
+          quantity?: number | null
           status?: string
           tax_id: string
           updated_at?: string
@@ -878,13 +886,17 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          calculation_snapshot?: Json | null
           created_at?: string
+          destination_port?: string | null
           email?: string
           id?: string
           is_authenticated?: boolean
           mobile_phone?: string
+          notes?: string | null
           postal_code?: string
           product_id?: string
+          quantity?: number | null
           status?: string
           tax_id?: string
           updated_at?: string
