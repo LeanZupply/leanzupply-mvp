@@ -72,7 +72,10 @@ export default function Checkout() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(() => {
+    const saved = getGuestContactFromSession();
+    return saved?.quantity || 1;
+  });
   const [notes, setNotes] = useState("");
   const [originPort, setOriginPort] = useState<string>("");
   const [selectedDestinationPort, setSelectedDestinationPort] = useState<string>("");
@@ -124,7 +127,11 @@ export default function Checkout() {
         return;
       }
       setProduct(data);
-      setQuantity(data.moq || 1);
+      // Only set to MOQ if no saved quantity from Product Details page
+      const savedData = getGuestContactFromSession();
+      if (!savedData?.quantity) {
+        setQuantity(data.moq || 1);
+      }
       // Set default origin port from product
       if (data.delivery_port) {
         setOriginPort(data.delivery_port);
@@ -486,7 +493,10 @@ export default function Checkout() {
         }} />
 
           {/* Envío Local (España) - Siempre incluido */}
-          <LocalShippingCalculator totalVolumeM3={(product.volume_m3 || 0) * quantity} onCalculationComplete={calc => {
+          <LocalShippingCalculator
+            totalVolumeM3={(product.volume_m3 || 0) * quantity}
+            initialPostalCode={!user ? guestContactData.postalCode : profile?.postal_code || ""}
+            onCalculationComplete={calc => {
           if (calc) {
             setLocalShippingCalc(calc);
             // Sumar internacional + local

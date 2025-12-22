@@ -9,6 +9,7 @@ export interface GuestContactData {
   taxId: string;
   postalCode: string;
   acceptedTerms: boolean;
+  quantity?: number;  // Optional - persists user's selected quantity from Product Details
 }
 
 const SESSION_STORAGE_KEY = 'guest_contact_data';

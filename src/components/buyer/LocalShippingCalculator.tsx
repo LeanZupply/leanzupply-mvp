@@ -14,17 +14,26 @@ interface LocalShippingCalculatorProps {
   totalVolumeM3: number;
   onCalculationComplete?: (calculation: LocalShippingCalculation | null) => void;
   className?: string;
+  initialPostalCode?: string;
 }
 
 export function LocalShippingCalculator({
   totalVolumeM3,
   onCalculationComplete,
   className,
+  initialPostalCode,
 }: LocalShippingCalculatorProps) {
-  const [postalCode, setPostalCode] = useState("");
+  const [postalCode, setPostalCode] = useState(initialPostalCode || "");
   const [calculation, setCalculation] = useState<LocalShippingCalculation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Update postal code when initialPostalCode prop changes
+  useEffect(() => {
+    if (initialPostalCode && initialPostalCode !== postalCode) {
+      setPostalCode(initialPostalCode);
+    }
+  }, [initialPostalCode]);
 
   useEffect(() => {
     if (!postalCode || postalCode.length < 4) {

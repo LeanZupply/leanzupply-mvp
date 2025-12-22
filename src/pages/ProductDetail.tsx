@@ -202,8 +202,11 @@ export default function ProductDetail() {
 
   const handleQuoteRequest = () => {
     if (!user) {
-      // Non-authenticated user: save contact data and go to checkout (guest mode)
-      saveGuestContactToSession(guestContactData);
+      // Non-authenticated user: save contact data and quantity, then go to checkout (guest mode)
+      saveGuestContactToSession({
+        ...guestContactData,
+        quantity: costQuantity,
+      });
       navigate(`/checkout/${id}?quote=true`);
     } else {
       // Authenticated user: check if profile is complete
