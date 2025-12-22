@@ -24,6 +24,16 @@ interface QuoteRequest {
   is_authenticated: boolean;
   created_at: string;
   updated_at: string;
+  quantity: number | null;
+  notes: string | null;
+  destination_port: string | null;
+  calculation_snapshot: {
+    breakdown?: {
+      total?: number;
+      total_volume_m3?: number;
+      price_unit?: number;
+    };
+  } | null;
   product: {
     name: string;
     category: string;
@@ -160,6 +170,16 @@ const SuperadminQuoteRequests = () => {
     }
   };
 
+  const formatCurrency = (value: number | undefined | null) => {
+    if (value == null) return "—";
+    return `€${value.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const formatVolume = (value: number | undefined | null) => {
+    if (value == null) return "—";
+    return `${value.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m³`;
+  };
+
   if (loading) {
     return (
       <Card>
@@ -272,8 +292,10 @@ const SuperadminQuoteRequests = () => {
               <TableRow>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Producto</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead className="hidden md:table-cell">Teléfono</TableHead>
+                <TableHead className="hidden lg:table-cell">Email</TableHead>
+                <TableHead className="text-right">Cant.</TableHead>
+                <TableHead className="text-right hidden md:table-cell">Total EUR</TableHead>
+                <TableHead className="text-right hidden lg:table-cell">Volumen</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Acciones</TableHead>
@@ -292,9 +314,15 @@ const SuperadminQuoteRequests = () => {
                   <TableCell className="font-medium">
                     {request.product?.name || "—"}
                   </TableCell>
-                  <TableCell className="text-sm">{request.email}</TableCell>
-                  <TableCell className="hidden md:table-cell text-sm">
-                    {request.mobile_phone}
+                  <TableCell className="hidden lg:table-cell text-sm">{request.email}</TableCell>
+                  <TableCell className="text-right text-sm">
+                    {request.quantity || "—"}
+                  </TableCell>
+                  <TableCell className="text-right hidden md:table-cell text-sm font-medium">
+                    {formatCurrency(request.calculation_snapshot?.breakdown?.total)}
+                  </TableCell>
+                  <TableCell className="text-right hidden lg:table-cell text-sm">
+                    {formatVolume(request.calculation_snapshot?.breakdown?.total_volume_m3)}
                   </TableCell>
                   <TableCell>
                     <Badge variant={request.is_authenticated ? "default" : "secondary"}>
@@ -371,6 +399,33 @@ const SuperadminQuoteRequests = () => {
                   </Badge>
                 </div>
               </div>
+
+              {/* Quote Details: Quantity, Total, Volume */}
+              <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm font-medium text-foreground/70 mb-1">Cantidad</p>
+                  <p className="text-lg font-bold">{selectedRequest.quantity || "—"} uds</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground/70 mb-1">Total EUR</p>
+                  <p className="text-lg font-bold text-primary">
+                    {formatCurrency(selectedRequest.calculation_snapshot?.breakdown?.total)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground/70 mb-1">Volumen</p>
+                  <p className="text-lg font-bold">
+                    {formatVolume(selectedRequest.calculation_snapshot?.breakdown?.total_volume_m3)}
+                  </p>
+                </div>
+              </div>
+
+              {selectedRequest.notes && (
+                <div>
+                  <p className="text-sm font-medium text-foreground/70 mb-1">Notas del Cliente</p>
+                  <p className="text-sm bg-muted p-3 rounded-lg">{selectedRequest.notes}</p>
+                </div>
+              )}
 
               {selectedRequest.is_authenticated && selectedRequest.profile && (
                 <div>

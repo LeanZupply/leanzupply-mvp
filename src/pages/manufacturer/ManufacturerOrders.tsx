@@ -64,6 +64,16 @@ interface QuoteRequest {
   status: string;
   is_authenticated: boolean;
   created_at: string;
+  quantity: number | null;
+  notes: string | null;
+  destination_port: string | null;
+  calculation_snapshot: {
+    breakdown?: {
+      total?: number;
+      total_volume_m3?: number;
+      price_unit?: number;
+    };
+  } | null;
   product: {
     id: string;
     name: string;
@@ -127,6 +137,7 @@ const ManufacturerOrders = () => {
         .select(`
           id, product_id, email, mobile_phone, tax_id, postal_code,
           status, is_authenticated, created_at,
+          quantity, notes, destination_port, calculation_snapshot,
           product:products(id, name, category, images)
         `)
         .order("created_at", { ascending: false });
@@ -769,6 +780,45 @@ const ManufacturerOrders = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Quote Details: Quantity, Total, Volume */}
+              {(selectedQuoteRequest.quantity || selectedQuoteRequest.calculation_snapshot) && (
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardContent className="pt-6">
+                    <h4 className="font-semibold text-foreground mb-4">Detalles de la Solicitud</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground mb-1">Cantidad</p>
+                        <p className="text-xl font-bold text-foreground">{selectedQuoteRequest.quantity || "—"}</p>
+                        <p className="text-xs text-muted-foreground">unidades</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground mb-1">Total EUR</p>
+                        <p className="text-xl font-bold text-primary">
+                          {selectedQuoteRequest.calculation_snapshot?.breakdown?.total
+                            ? `€${selectedQuoteRequest.calculation_snapshot.breakdown.total.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : "—"}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground mb-1">Volumen</p>
+                        <p className="text-xl font-bold text-foreground">
+                          {selectedQuoteRequest.calculation_snapshot?.breakdown?.total_volume_m3
+                            ? `${selectedQuoteRequest.calculation_snapshot.breakdown.total_volume_m3.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : "—"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">m³</p>
+                      </div>
+                    </div>
+                    {selectedQuoteRequest.notes && (
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <p className="text-xs text-muted-foreground mb-1">Notas del cliente</p>
+                        <p className="text-sm text-foreground">{selectedQuoteRequest.notes}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Contact Info */}
               <Card className="bg-surface border-border">
