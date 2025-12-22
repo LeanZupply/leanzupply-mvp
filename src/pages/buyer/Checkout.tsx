@@ -16,8 +16,16 @@ import { ArrowLeft, Package, CreditCard, CheckCircle, Anchor, Ship, MapPin, Cloc
 import { CostBreakdown } from "@/components/CostBreakdown";
 import { LocalShippingCalculator } from "@/components/buyer/LocalShippingCalculator";
 import { ProfileCompletionModal } from "@/components/buyer/ProfileCompletionModal";
+import { GuestContactForm } from "@/components/buyer/GuestContactForm";
 import { LocalShippingCalculation } from "@/lib/localShippingCalculator";
 import { calculateOrderTotal } from "@/lib/priceCalculations";
+import {
+  GuestContactData,
+  getEmptyGuestContactData,
+  isGuestContactValid,
+  getGuestContactFromSession,
+  clearGuestContactFromSession,
+} from "@/lib/guestContactValidation";
 interface Product {
   id: string;
   name: string;
@@ -75,11 +83,11 @@ export default function Checkout() {
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Guest form state (for non-authenticated users in quote mode)
-  const [guestEmail, setGuestEmail] = useState("");
-  const [guestPhone, setGuestPhone] = useState("");
-  const [guestTaxId, setGuestTaxId] = useState("");
-  const [guestPostalCode, setGuestPostalCode] = useState("");
-  const [guestAcceptedTerms, setGuestAcceptedTerms] = useState(false);
+  // Initialize from sessionStorage if data was saved from Product Detail page
+  const [guestContactData, setGuestContactData] = useState<GuestContactData>(() => {
+    const saved = getGuestContactFromSession();
+    return saved || getEmptyGuestContactData();
+  });
   const [sessionId] = useState(() => {
     let sid = sessionStorage.getItem('session_id');
     if (!sid) {
@@ -153,21 +161,6 @@ export default function Checkout() {
     );
   };
 
-  // Validate guest form
-  const isGuestFormValid = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^\+?[\d\s\-]{9,20}$/;
-    const postalCodeRegex = /^\d{4,10}$/;
-
-    return (
-      emailRegex.test(guestEmail.trim()) &&
-      phoneRegex.test(guestPhone.trim()) &&
-      guestTaxId.trim().length >= 5 &&
-      postalCodeRegex.test(guestPostalCode.trim()) &&
-      guestAcceptedTerms
-    );
-  };
-
   // Handle profile modal completion - retry order submission
   const handleProfileComplete = () => {
     setShowProfileModal(false);
@@ -184,7 +177,7 @@ export default function Checkout() {
 
       // For guests, validate the guest form
       if (isGuest) {
-        if (!isGuestFormValid()) {
+        if (!isGuestContactValid(guestContactData)) {
           toast.error("Por favor completa todos los campos correctamente");
           return;
         }
@@ -209,10 +202,10 @@ export default function Checkout() {
           .insert({
             product_id: productId,
             user_id: isGuest ? null : user!.id,
-            email: isGuest ? guestEmail.trim() : (profile?.email || user!.email),
-            mobile_phone: isGuest ? guestPhone.trim() : profile?.mobile_phone,
-            tax_id: isGuest ? guestTaxId.trim().toUpperCase() : profile?.tax_id,
-            postal_code: isGuest ? guestPostalCode.trim() : profile?.postal_code,
+            email: isGuest ? guestContactData.email.trim() : (profile?.email || user!.email),
+            mobile_phone: isGuest ? guestContactData.phone.trim() : profile?.mobile_phone,
+            tax_id: isGuest ? guestContactData.taxId.trim().toUpperCase() : profile?.tax_id,
+            postal_code: isGuest ? guestContactData.postalCode.trim() : profile?.postal_code,
             is_authenticated: !isGuest,
             status: "pending",
             quantity: quantity,
@@ -231,6 +224,11 @@ export default function Checkout() {
         // Track GTM events
         trackFormSubmission(FORM_NAMES.QUOTE_REQUEST);
         trackQuoteRequest(productId!, !isGuest);
+
+        // Clear guest contact data from sessionStorage after successful submission
+        if (isGuest) {
+          clearGuestContactFromSession();
+        }
 
         toast.success("¡Solicitud enviada exitosamente!", {
           duration: 5000
@@ -467,84 +465,11 @@ export default function Checkout() {
 
           {/* Guest Contact Form - Only shown for non-authenticated users in quote mode */}
           {isQuoteMode && !user && (
-            <Card>
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
-                  Datos de Contacto
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 p-4 sm:p-6">
-                <p className="text-sm text-muted-foreground">
-                  Introduce tus datos para que podamos enviarte la propuesta comercial.
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="guest-email">Email *</Label>
-                    <Input
-                      id="guest-email"
-                      type="email"
-                      placeholder="tu@empresa.com"
-                      value={guestEmail}
-                      onChange={(e) => setGuestEmail(e.target.value)}
-                      className="mt-2"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="guest-phone">Teléfono móvil con WhatsApp *</Label>
-                    <Input
-                      id="guest-phone"
-                      type="tel"
-                      placeholder="+34 600 123 456"
-                      value={guestPhone}
-                      onChange={(e) => setGuestPhone(e.target.value)}
-                      className="mt-2"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="guest-taxid">NIF/CIF/NIE/DNI/VAT-ID *</Label>
-                    <Input
-                      id="guest-taxid"
-                      type="text"
-                      placeholder="B12345678"
-                      value={guestTaxId}
-                      onChange={(e) => setGuestTaxId(e.target.value.toUpperCase())}
-                      className="mt-2"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="guest-postal">Código Postal *</Label>
-                    <Input
-                      id="guest-postal"
-                      type="text"
-                      placeholder="28001"
-                      value={guestPostalCode}
-                      onChange={(e) => setGuestPostalCode(e.target.value)}
-                      className="mt-2"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 pt-2">
-                  <Checkbox
-                    id="guest-terms"
-                    checked={guestAcceptedTerms}
-                    onCheckedChange={(checked) => setGuestAcceptedTerms(checked === true)}
-                  />
-                  <Label htmlFor="guest-terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
-                    Declaro que los datos proporcionados corresponden a una empresa legalmente registrada y activa, y acepto los{" "}
-                    <a href="/terms" className="text-primary underline hover:no-underline" target="_blank">
-                      términos y condiciones
-                    </a>{" "}
-                    y la{" "}
-                    <a href="/privacy" className="text-primary underline hover:no-underline" target="_blank">
-                      política de privacidad
-                    </a>.
-                  </Label>
-                </div>
-              </CardContent>
-            </Card>
+            <GuestContactForm
+              values={guestContactData}
+              onChange={setGuestContactData}
+              showCard={true}
+            />
           )}
 
           {/* Envío Internacional - Siempre incluido */}
@@ -706,7 +631,7 @@ export default function Checkout() {
                   submitting ||
                   quantity < product.moq ||
                   totalCost === 0 ||
-                  (isQuoteMode && !user && !isGuestFormValid())
+                  (isQuoteMode && !user && !isGuestContactValid(guestContactData))
                 }
               >
                 {submitting

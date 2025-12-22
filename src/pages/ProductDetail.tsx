@@ -40,6 +40,13 @@ import { ProductCard } from "@/components/ProductCard";
 import { CostBreakdown } from "@/components/CostBreakdown";
 import { calculateOrderTotal } from "@/lib/priceCalculations";
 import { ProfileCompletionModal } from "@/components/buyer/ProfileCompletionModal";
+import { GuestContactForm } from "@/components/buyer/GuestContactForm";
+import {
+  GuestContactData,
+  getEmptyGuestContactData,
+  isGuestContactValid,
+  saveGuestContactToSession,
+} from "@/lib/guestContactValidation";
 import {
   Carousel,
   CarouselContent,
@@ -114,6 +121,7 @@ export default function ProductDetail() {
   const [costQuantity, setCostQuantity] = useState(1);
   const [deliveryTimeline, setDeliveryTimeline] = useState<any>(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [guestContactData, setGuestContactData] = useState<GuestContactData>(getEmptyGuestContactData);
 
   const [sessionId] = useState(() => {
     let sid = sessionStorage.getItem('session_id');
@@ -194,7 +202,8 @@ export default function ProductDetail() {
 
   const handleQuoteRequest = () => {
     if (!user) {
-      // Non-authenticated user: go directly to checkout (guest mode)
+      // Non-authenticated user: save contact data and go to checkout (guest mode)
+      saveGuestContactToSession(guestContactData);
       navigate(`/checkout/${id}?quote=true`);
     } else {
       // Authenticated user: check if profile is complete
@@ -809,14 +818,24 @@ export default function ProductDetail() {
               />
             )}
 
-            {/* Botón Pedir Información */}
+            {/* Guest Contact Form - Only for non-authenticated users */}
+            {!user && (
+              <GuestContactForm
+                values={guestContactData}
+                onChange={setGuestContactData}
+                showCard={true}
+              />
+            )}
+
+            {/* Boton Pedir Informacion */}
             <Button
               size="lg"
               className="w-full"
               onClick={handleQuoteRequest}
+              disabled={!user && !isGuestContactValid(guestContactData)}
             >
               <MessageSquare className="h-5 w-5 mr-2" />
-              Pedir Información
+              Pedir Informacion
             </Button>
 
             {/* Badges de Seguridad */}
