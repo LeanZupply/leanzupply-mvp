@@ -104,7 +104,11 @@ const Login = () => {
                   <Label htmlFor="password" className="text-sm font-medium text-foreground">
                     Contraseña
                   </Label>
-                  <button type="button" className="text-sm text-primary hover:text-primary/80 transition-colors">
+                  <button 
+                    type="button" 
+                    onClick={() => navigate("/auth/forgot-password")}
+                    className="text-sm text-primary hover:text-primary/80 transition-colors"
+                  >
                     ¿Olvidaste tu contraseña?
                   </button>
                 </div>

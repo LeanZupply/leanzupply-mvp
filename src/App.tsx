@@ -14,6 +14,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 
 // Lazy load dashboard pages
@@ -72,6 +74,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth/login" element={<Login />} />
               <Route path="/auth/signup" element={<Signup />} />
+              <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+              <Route path="/auth/reset-password" element={<ResetPassword />} />
 
               {/* Legal Pages (Public Routes) */}
               <Route path="/legal/privacidad" element={<Suspense fallback={<LoadingScreen />}><PrivacyPolicy /></Suspense>} />

@@ -132,6 +132,29 @@ export const loginSchema = z.object({
     .min(1, 'La contraseña es requerida'),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string()
+    .email('Email inválido')
+    .max(255, 'El email no puede exceder 255 caracteres')
+    .trim()
+    .toLowerCase(),
+});
+
+export const resetPasswordSchema = z.object({
+  password: z.string()
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .max(100, 'La contraseña no puede exceder 100 caracteres')
+    .regex(/[a-z]/, 'Debe contener al menos una letra minúscula')
+    .regex(/[A-Z]/, 'Debe contener al menos una letra mayúscula')
+    .regex(/[0-9]/, 'Debe contener al menos un número'),
+  
+  confirmPassword: z.string()
+    .min(1, 'Confirma tu contraseña'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Las contraseñas no coinciden',
+  path: ['confirmPassword'],
+});
+
 // Profile Validation Schema
 export const profileSchema = z.object({
   full_name: z.string()
