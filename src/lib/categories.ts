@@ -31,6 +31,37 @@ export const PRODUCT_CATEGORIES = [
 
 export type ProductCategory = typeof PRODUCT_CATEGORIES[number];
 
+// Mapeo de categorías a slugs SEO-friendly
+export const CATEGORY_SLUGS: Record<ProductCategory, string> = {
+  "Cocina y Restauración": "cocina-restauracion",
+  "Panaderías y Pastelerías": "panaderia-pasteleria",
+  "Carnicerías y Chacinados": "carniceria-chacinados",
+  "Heladerías y Pastelería Fría": "heladeria-pasteleria-fria",
+  "Refrigeración Comercial e Industrial": "refrigeracion-comercial-industrial",
+  "Packaging y Envasado": "packaging-envasado",
+  "Mobiliario y Equipamiento para Hoteles": "mobiliario-equipamiento-hoteles",
+  "Equipamiento Audiovisual y para Eventos": "equipamiento-audiovisual-eventos",
+  "Movilidad y Logística Interna (Intralogística)": "movilidad-logistica-intralogistica",
+  "Ferretería y Construcción": "ferreteria-construccion",
+  "Vending & Automatización Comercial": "vending-automatizacion-comercial",
+  "Centros de Entrenamiento y Gimnasios Profesionales": "centros-entrenamiento-gimnasios",
+};
+
+// Mapeo inverso: slug a nombre de categoría
+export const SLUG_TO_CATEGORY: Record<string, ProductCategory> = Object.fromEntries(
+  Object.entries(CATEGORY_SLUGS).map(([category, slug]) => [slug, category as ProductCategory])
+) as Record<string, ProductCategory>;
+
+// Función para obtener el slug de una categoría
+export const getCategorySlug = (category: string): string | undefined => {
+  return CATEGORY_SLUGS[category as ProductCategory];
+};
+
+// Función para obtener la categoría desde un slug
+export const getCategoryBySlug = (slug: string): ProductCategory | undefined => {
+  return SLUG_TO_CATEGORY[slug];
+};
+
 // Mapeo de categorías a iconos
 export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   "Cocina y Restauración": ChefHat,

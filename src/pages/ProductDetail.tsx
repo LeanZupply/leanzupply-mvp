@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { downloadFile, normalizeProductDocPath } from "@/lib/storage";
 import { Footer } from "@/components/Footer";
+import { SEO } from "@/components/SEO";
+import { isUUID } from "@/lib/slugify";
+import { getCategorySlug } from "@/lib/categories";
 import {
   ArrowLeft,
   Building2,
@@ -58,6 +62,7 @@ import {
 interface Product {
   id: string;
   name: string;
+  slug: string | null;
   description: string | null;
   category: string;
   subcategory: string | null;
@@ -234,23 +239,38 @@ export default function ProductDetail() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      
-      // Fetch product primero, sin joins (no hay FK explícitas)
-      const { data: productData, error: productError } = await supabase
+
+      // Determine if id is UUID or slug
+      const isIdUUID = isUUID(id || '');
+
+      // Fetch product - query by id or slug based on the parameter type
+      let query = supabase
         .from("products")
         .select("*")
-        .eq("id", id)
-        .eq("status", "active")
-        .maybeSingle();
+        .eq("status", "active");
+
+      if (isIdUUID) {
+        query = query.eq("id", id);
+      } else {
+        query = query.eq("slug", id);
+      }
+
+      const { data: productData, error: productError } = await query.maybeSingle();
 
       if (productError) throw productError;
-      
+
       if (!productData) {
         setProduct(null);
         setLoading(false);
         return;
       }
-      
+
+      // If accessed via UUID and product has a slug, redirect to SEO-friendly URL
+      if (isIdUUID && productData.slug) {
+        navigate(`/producto/${productData.slug}`, { replace: true });
+        return;
+      }
+
       setProduct(productData);
       
       // Cargar info de fabricante desde profiles y manufacturers (vía user_id)
@@ -393,15 +413,72 @@ export default function ProductDetail() {
   const images = parseImages(product.images);
   const currentImage = images[currentImageIndex] || { url: "/placeholder.svg", alt: product.name };
 
+  // Prepare SEO data
+  const productSlug = product.slug || product.id;
+  const categorySlug = getCategorySlug(product.category);
+  const productImages = parseImages(product.images);
+  const productImage = productImages[0]?.url;
+  const truncatedDescription = product.description
+    ? product.description.substring(0, 160)
+    : `Compra ${product.name} de fabricantes certificados en LeanZupply. Precio FOB directo de fábrica.`;
+
+  // JSON-LD structured data for product
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "description": product.description || truncatedDescription,
+    "image": productImages.map(img => img.url),
+    "sku": product.sku || product.id,
+    "brand": manufacturer ? {
+      "@type": "Organization",
+      "name": manufacturer.registered_brand
+    } : undefined,
+    "category": product.category,
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "EUR",
+      "price": product.price_unit,
+      "availability": product.stock > 0
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      "seller": manufacturer ? {
+        "@type": "Organization",
+        "name": manufacturer.registered_brand
+      } : undefined
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      {/* SEO Meta Tags */}
+      <SEO
+        title={`${product.name} - ${product.category}`}
+        description={truncatedDescription}
+        canonical={`https://leanzupply.com/producto/${productSlug}`}
+        ogImage={productImage}
+        type="product"
+      />
+
+      {/* JSON-LD Structured Data */}
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify(productJsonLd)}
+        </script>
+      </Helmet>
+
       {/* Breadcrumb */}
       <div className="bg-muted/30 border-b border-border">
         <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <button onClick={() => navigate("/")} className="hover:text-foreground">Inicio</button>
             <span>/</span>
-            <button onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/buyer/catalog'); }} className="hover:text-foreground">{product.category}</button>
+            <button
+              onClick={() => categorySlug ? navigate(`/categoria/${categorySlug}`) : navigate('/')}
+              className="hover:text-foreground"
+            >
+              {product.category}
+            </button>
             <span>/</span>
             <span className="text-foreground font-medium">{product.name}</span>
           </div>
@@ -917,7 +994,7 @@ export default function ProductDetail() {
                   <CarouselItem key={related.id} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/4">
                     <ProductCard
                       product={related}
-                      onClick={() => navigate(`/products/${related.id}`)}
+                      onClick={() => navigate(related.slug ? `/producto/${related.slug}` : `/products/${related.id}`)}
                       showCategory={false}
                     />
                   </CarouselItem>

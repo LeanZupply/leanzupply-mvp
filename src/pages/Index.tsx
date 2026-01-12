@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { handleError } from "@/lib/errorHandler";
 import { ProductCard } from "@/components/ProductCard";
 import { Footer } from "@/components/Footer";
+import { SEO } from "@/components/SEO";
+
 interface Product {
   id: string;
   name: string;
@@ -189,6 +191,14 @@ const Index = () => {
     return null;
   }
   return <div className="flex min-h-screen flex-col bg-background">
+      {/* SEO Meta Tags */}
+      <SEO
+        title="Plataforma D2B para Equipamiento Profesional"
+        description="LeanZupply conecta empresas europeas con fabricantes certificados. Compra maquinaria industrial, equipamiento para hostelería y más con precios FOB directos de fábrica."
+        canonical="https://leanzupply.com/"
+        type="website"
+      />
+
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
         <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
