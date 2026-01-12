@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { downloadFile, normalizeProductDocPath } from "@/lib/storage";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
+import { BreadcrumbNav } from "@/components/BreadcrumbNav";
 import { isUUID } from "@/lib/slugify";
 import { getCategorySlug } from "@/lib/categories";
 import {
@@ -468,22 +469,14 @@ export default function ProductDetail() {
       </Helmet>
 
       {/* Breadcrumb */}
-      <div className="bg-muted/30 border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <button onClick={() => navigate("/")} className="hover:text-foreground">Inicio</button>
-            <span>/</span>
-            <button
-              onClick={() => categorySlug ? navigate(`/categoria/${categorySlug}`) : navigate('/')}
-              className="hover:text-foreground"
-            >
-              {product.category}
-            </button>
-            <span>/</span>
-            <span className="text-foreground font-medium">{product.name}</span>
-          </div>
-        </div>
-      </div>
+      <BreadcrumbNav
+        items={[
+          { label: "Inicio", href: "/" },
+          { label: product.category, href: categorySlug ? `/categoria/${categorySlug}` : "/" },
+          { label: product.name }
+        ]}
+        containerClassName="max-w-7xl mx-auto px-6"
+      />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Botón Volver */}

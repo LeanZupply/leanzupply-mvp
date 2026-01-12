@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, ArrowRight, Search, ChevronRight } from "lucide-react";
+import { Package, ArrowRight, Search } from "lucide-react";
+import { BreadcrumbNav } from "@/components/BreadcrumbNav";
 import { toast } from "sonner";
 import { handleError } from "@/lib/errorHandler";
 import { ProductCard } from "@/components/ProductCard";
@@ -197,17 +198,12 @@ const CategoryPage = () => {
       </header>
 
       {/* Breadcrumb */}
-      <div className="border-b border-border bg-muted/30">
-        <div className="container mx-auto px-4 py-3">
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-foreground transition-colors">
-              Inicio
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground font-medium">{categoryName}</span>
-          </nav>
-        </div>
-      </div>
+      <BreadcrumbNav
+        items={[
+          { label: "Inicio", href: "/" },
+          { label: categoryName || "" }
+        ]}
+      />
 
       {/* Category Header */}
       <section className="px-4 py-12 bg-gradient-to-b from-muted/50 to-background">

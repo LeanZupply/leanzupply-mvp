@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieBanner } from "@/components/CookieBanner";
 import { lazy, Suspense } from "react";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { OrganizationSchema } from "@/components/OrganizationSchema";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -68,6 +69,7 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <HelmetProvider>
+    <OrganizationSchema />
     <QueryClientProvider client={queryClient}>
       <CookieConsentProvider>
         <TooltipProvider>
