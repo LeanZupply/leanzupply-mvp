@@ -81,7 +81,14 @@ export const Footer = ({ onCTAClick }: FooterProps) => {
               <li>Documentacion requerida a Compradores</li>
               <li>Documentacion requerida a Fabricantes</li>
               <li>Incoterm soportado: FOB</li>
-              <li>Terminos y Condiciones Generales</li>
+              <li>
+                <Link
+                  to="/legal/terminos"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Terminos y Condiciones Generales
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -89,6 +96,14 @@ export const Footer = ({ onCTAClick }: FooterProps) => {
           <div className="space-y-4">
             <h5 className="font-semibold">Legal</h5>
             <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <Link
+                  to="/legal/terminos"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Terminos y Condiciones
+                </Link>
+              </li>
               <li>
                 <Link
                   to="/legal/privacidad"

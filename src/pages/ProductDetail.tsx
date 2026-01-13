@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +28,8 @@ import {
   Clock,
   Truck,
   Shield,
+  ShieldCheck,
+  BadgeCheck,
   Eye,
   ShoppingCart,
   ChevronLeft,
@@ -67,6 +70,8 @@ interface Product {
   description: string | null;
   category: string;
   subcategory: string | null;
+  model: string | null;
+  brand: string | null;
   price_unit: number;
   moq: number;
   stock: number;
@@ -109,6 +114,7 @@ interface Product {
 
 interface Manufacturer {
   registered_brand: string;
+  legal_name?: string;
   country?: string;
   brand_logo_url?: string;
 }
@@ -127,6 +133,7 @@ export default function ProductDetail() {
   const [costQuantity, setCostQuantity] = useState(1);
   const [deliveryTimeline, setDeliveryTimeline] = useState<any>(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [infoRequestModalOpen, setInfoRequestModalOpen] = useState(false);
   const [guestContactData, setGuestContactData] = useState<GuestContactData>(getEmptyGuestContactData);
 
   const [sessionId] = useState(() => {
@@ -213,7 +220,7 @@ export default function ProductDetail() {
         ...guestContactData,
         quantity: costQuantity,
       });
-      navigate(`/checkout/${id}?quote=true`);
+      navigate(`/checkout/${id}`);
     } else {
       // Authenticated user: check if profile is complete
       const isComplete = profile?.mobile_phone &&
@@ -223,7 +230,7 @@ export default function ProductDetail() {
 
       if (isComplete) {
         // Profile complete: go directly to checkout
-        navigate(`/checkout/${id}?quote=true`);
+        navigate(`/checkout/${id}`);
       } else {
         // Profile incomplete: show ProfileCompletionModal first
         setProfileModalOpen(true);
@@ -234,7 +241,7 @@ export default function ProductDetail() {
   const handleProfileComplete = () => {
     setProfileModalOpen(false);
     // After profile is complete, navigate to checkout
-    navigate(`/checkout/${id}?quote=true`);
+    navigate(`/checkout/${id}`);
   };
 
   const fetchProduct = async () => {
@@ -283,12 +290,13 @@ export default function ProductDetail() {
       
       const { data: detailsData } = await supabase
         .from("manufacturers")
-        .select("registered_brand,brand_logo_url")
+        .select("registered_brand,brand_logo_url,legal_name")
         .eq("user_id", productData.manufacturer_id)
         .maybeSingle();
-      
+
       const combinedManufacturer: Manufacturer = {
         registered_brand: detailsData?.registered_brand || profileData?.company_name || "",
+        legal_name: detailsData?.legal_name,
         country: profileData?.country,
         brand_logo_url: detailsData?.brand_logo_url,
       };
@@ -697,15 +705,31 @@ export default function ProductDetail() {
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">Fabricante</p>
                   <p className="font-semibold text-lg">{manufacturer.registered_brand}</p>
+                  {manufacturer.legal_name && (
+                    <p className="text-xs text-muted-foreground">{manufacturer.legal_name}</p>
+                  )}
                 </div>
               </div>
             )}
             
             <div>
               <Badge variant="secondary" className="mb-3">{product.category}</Badge>
-              <h1 className="text-4xl font-bold text-foreground mb-4 leading-tight">
+              <h1 className="text-4xl font-bold text-foreground mb-2 leading-tight">
                 {product.name}
               </h1>
+              {/* Model and Brand */}
+              <div className="space-y-1 mb-4">
+                {product.model && (
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Modelo:</span> {product.model}
+                  </p>
+                )}
+                {product.brand && (
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Marca:</span> {product.brand}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Precio y MOQ */}
@@ -900,25 +924,54 @@ export default function ProductDetail() {
               />
             )}
 
-            {/* Boton Pedir Informacion */}
-            <Button
-              size="lg"
-              className="w-full"
-              onClick={handleQuoteRequest}
-              disabled={!user && !isGuestContactValid(guestContactData)}
-            >
-              <MessageSquare className="h-5 w-5 mr-2" />
-              Pedir Informacion
-            </Button>
+            {/* Dual CTAs: Pedir Información + Comprar */}
+            <div className="flex gap-4">
+              <Button
+                size="lg"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setInfoRequestModalOpen(true)}
+                disabled={!user && !isGuestContactValid(guestContactData)}
+              >
+                <MessageSquare className="h-5 w-5 mr-2" />
+                Pedir Información
+              </Button>
+              <Button
+                size="lg"
+                className="flex-1"
+                onClick={handleQuoteRequest}
+                disabled={!user && !isGuestContactValid(guestContactData)}
+              >
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                Comprar
+              </Button>
+            </div>
 
-            {/* Badges de Seguridad */}
+            {/* Badges de Seguridad (Trust Badges) */}
             <div className="flex flex-wrap gap-2">
-              {product.warranty_terms && (
-                <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
-                  <Shield className="h-3 w-3 mr-1" />
-                  Con Garantía
-                </Badge>
-              )}
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <Badge className="bg-green-500/10 text-green-600 border-green-500/20 cursor-help">
+                        <Shield className="h-3 w-3 mr-1" />
+                        Garantía del Fabricante
+                      </Badge>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>La garantía es otorgada directamente por el fabricante. LeanZupply gestiona la operación y acompaña el proceso.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+                <ShieldCheck className="h-3 w-3 mr-1" />
+                Operación Segura
+              </Badge>
+              <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/20">
+                <BadgeCheck className="h-3 w-3 mr-1" />
+                Fabricante Verificado
+              </Badge>
             </div>
           </div>
         </div>
@@ -1053,6 +1106,47 @@ export default function ProductDetail() {
         profile={profile}
         userId={user?.id || ""}
       />
+
+      {/* Info Request Modal */}
+      <Dialog open={infoRequestModalOpen} onOpenChange={setInfoRequestModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Solicitud Enviada</DialogTitle>
+            <DialogDescription>
+              Gracias por solicitar información sobre este producto
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              <p className="text-sm text-green-800 dark:text-green-200">
+                <CheckCircle className="h-5 w-5 inline-block mr-2 text-green-600" />
+                Gracias por solicitar información sobre este producto, le contactaremos en menos de 24 horas hábiles.
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground text-center">
+              Seguir explorando el catálogo
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setInfoRequestModalOpen(false);
+                navigate("/");
+              }}
+            >
+              Volver al Catálogo
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={() => setInfoRequestModalOpen(false)}
+            >
+              Ver Producto
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

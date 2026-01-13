@@ -52,6 +52,7 @@ const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 // Lazy load legal pages
 const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
 const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
+const TermsAndConditions = lazy(() => import("./pages/legal/TermsAndConditions"));
 
 // Lazy load SEO pages
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
@@ -87,10 +88,11 @@ const App = () => (
               {/* Legal Pages (Public Routes) */}
               <Route path="/legal/privacidad" element={<Suspense fallback={<LoadingScreen />}><PrivacyPolicy /></Suspense>} />
               <Route path="/legal/cookies" element={<Suspense fallback={<LoadingScreen />}><CookiePolicy /></Suspense>} />
+              <Route path="/legal/terminos" element={<Suspense fallback={<LoadingScreen />}><TermsAndConditions /></Suspense>} />
 
               {/* Category Page (Public SEO Route) */}
               <Route path="/categoria/:slug" element={<Suspense fallback={<LoadingScreen />}><CategoryPage /></Suspense>} />
-            
+
             {/* Superadmin Routes */}
             <Route path="/superadmin" element={<ProtectedRoute allowedRoles={["superadmin"]}><Suspense fallback={<LoadingScreen />}><SuperadminDashboard /></Suspense></ProtectedRoute>} />
             <Route path="/superadmin/overview" element={<ProtectedRoute allowedRoles={["superadmin"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><SuperadminOverview /></Suspense></DashboardLayout></ProtectedRoute>} />
