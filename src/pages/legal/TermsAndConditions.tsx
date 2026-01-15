@@ -40,7 +40,7 @@ const TermsAndConditions = () => {
 
         <p className="text-lg text-muted-foreground mb-2">Plataforma LeanZupply</p>
         <p className="text-sm text-muted-foreground mb-8">
-          <strong>Version:</strong> 1.0 | <strong>Fecha de entrada en vigor:</strong> 07/01/2026
+          <strong>Version:</strong> 1.1 | <strong>Fecha de entrada en vigor:</strong> 15/01/2026
         </p>
 
         <div className="prose prose-gray dark:prose-invert max-w-none space-y-8">
@@ -52,7 +52,7 @@ const TermsAndConditions = () => {
             <div className="space-y-4">
               <h3 className="text-lg font-medium">1.1. Objeto y Ambito de Aplicacion</h3>
               <p className="text-muted-foreground">
-                Los presentes Terminos y Condiciones Generales (en adelante, "TyC") regulan el acceso y uso de la plataforma digital LeanZupply (en adelante, la "Plataforma"), operada por LeanZupply Limited con jurisdiccion en Hong Kong, (en adelante, "LeanZupply" o el "Operador").
+                Los presentes Terminos y Condiciones Generales (en adelante, "TyC") regulan el acceso y uso de la plataforma digital LeanZupply (en adelante, la "Plataforma"), operada por LeanZupply East Limited con jurisdiccion en Hong Kong, (en adelante, "LeanZupply" o el "Operador").
               </p>
               <p className="text-muted-foreground">
                 La Plataforma actua como intermediaria digital facilitando la conexion entre:
@@ -187,6 +187,27 @@ const TermsAndConditions = () => {
               <h3 className="text-lg font-medium">4.4. Incoterms y Condiciones de Entrega</h3>
               <p className="text-muted-foreground">
                 Las partes son libres de acordar los terminos de entrega segun los INCOTERMS® vigentes de la Camara de Comercio Internacional (ICC). LeanZupply recomienda la formalizacion por escrito de todos los terminos acordados.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">4.5. Rol del Comprador como Importador y Operador Economico en la Union Europea</h3>
+              <p className="text-muted-foreground">
+                En aquellas operaciones en las que los productos sean fabricados y enviados desde fuera de la Union Europea, el <strong>Usuario Comprador</strong> reconoce y acepta que, a los efectos de la normativa aduanera y de vigilancia de mercado aplicable, <strong>actuara como importador del producto y operador economico en la Union Europea</strong>, exclusivamente respecto del equipo, modelo y operacion comercial objeto de la compra realizada a traves de la Plataforma.
+              </p>
+              <p className="text-muted-foreground">
+                El Usuario Comprador asume, en dicho caracter y unicamente para la operacion especifica, las responsabilidades que la normativa vigente atribuye al importador u operador economico, incluyendo, sin limitacion:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-2 ml-4">
+                <li>la correcta introduccion del producto en el territorio de la Union Europea;</li>
+                <li>la conservacion y disponibilidad de la documentacion de conformidad correspondiente;</li>
+                <li>la colaboracion con las autoridades competentes en materia de vigilancia de mercado, cuando sea legalmente requerido.</li>
+              </ul>
+              <p className="text-muted-foreground">
+                El Usuario Comprador reconoce que estas responsabilidades <strong>no se extienden a otros productos, operaciones futuras ni a terceros</strong>, y que el <strong>Fabricante</strong> continua siendo el unico responsable del diseno, fabricacion, conformidad tecnica y marcado del producto conforme a la normativa aplicable.
+              </p>
+              <p className="text-muted-foreground font-medium">
+                LeanZupply <strong>no actua ni actuara en ningun caso</strong> como importador, representante autorizado, operador economico, ni asumira responsabilidad regulatoria alguna respecto de los productos comercializados a traves de la Plataforma.
               </p>
             </div>
           </section>
@@ -527,7 +548,7 @@ const TermsAndConditions = () => {
           {/* Footer note */}
           <div className="mt-8 pt-6 border-t border-border">
             <p className="text-sm text-muted-foreground italic">
-              Ultima actualizacion: 07 de enero de 2026
+              Ultima actualizacion: 15 de enero de 2026
             </p>
             <p className="text-sm text-muted-foreground mt-4 font-medium">
               Al utilizar la Plataforma LeanZupply, usted reconoce haber leido, comprendido y aceptado estos Terminos y Condiciones Generales en su totalidad.
