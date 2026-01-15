@@ -47,6 +47,7 @@ const BuyerProfile = lazy(() => import("./pages/buyer/BuyerProfile"));
 const BuyerNotifications = lazy(() => import("./pages/buyer/BuyerNotifications"));
 const Checkout = lazy(() => import("./pages/buyer/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/buyer/OrderConfirmation"));
+const PaymentInstructions = lazy(() => import("./pages/buyer/PaymentInstructions"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 
 // Lazy load legal pages
@@ -133,6 +134,7 @@ const App = () => (
             {/* Checkout Flow - handles auth internally (allows guests for quote mode) */}
             <Route path="/checkout/:productId" element={<Suspense fallback={<LoadingScreen />}><Checkout /></Suspense>} />
             <Route path="/order-confirmation" element={<Suspense fallback={<LoadingScreen />}><OrderConfirmation /></Suspense>} />
+            <Route path="/buyer/payment/:orderId" element={<ProtectedRoute allowedRoles={["buyer"]}><Suspense fallback={<LoadingScreen />}><PaymentInstructions /></Suspense></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
             </Routes>

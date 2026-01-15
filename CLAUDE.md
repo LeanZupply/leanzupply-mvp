@@ -8,6 +8,8 @@ LeanZupply is a D2B (Direct-to-Business) platform connecting certified manufactu
 
 **This project is in production.** Take extra care when making changes - ensure backwards compatibility and avoid breaking changes.
 
+**Commiting Rule** No Claude reference in any commit or PR.
+
 ## Development Commands
 
 ```bash

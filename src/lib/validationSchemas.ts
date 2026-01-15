@@ -227,3 +227,82 @@ export const profileSchema = z.object({
     errorMap: () => ({ message: 'Debe declarar ser empresa profesional activa registrada' })
   }),
 });
+
+// Buyer Information Schema for Checkout
+export const buyerInfoSchema = z.object({
+  // Section 1 - Personal Info (read-only, populated from profile)
+  email: z.string().email('Email invalido'),
+  full_name: z.string().min(1, 'El nombre completo es requerido'),
+  company_name: z.string().min(1, 'El nombre de empresa es requerido'),
+  country: z.string().min(1, 'El pais es requerido'),
+
+  // Section 2 - Fiscal Info
+  tax_id: z.string()
+    .trim()
+    .min(5, 'El NIF/CIF/NIE/DNI/VAT-ID debe tener al menos 5 caracteres')
+    .max(50, 'El identificador fiscal no puede exceder 50 caracteres'),
+  eori_number: z.string()
+    .trim()
+    .max(20, 'El numero EORI no puede exceder 20 caracteres')
+    .optional()
+    .or(z.literal('')),
+  mobile_phone: z.string()
+    .trim()
+    .min(9, 'El numero de contacto movil debe tener al menos 9 digitos')
+    .max(20, 'El numero de contacto movil no puede exceder 20 caracteres'),
+  address: z.string()
+    .trim()
+    .min(1, 'La direccion fiscal es requerida')
+    .max(500, 'La direccion fiscal no puede exceder 500 caracteres'),
+  city: z.string()
+    .trim()
+    .min(1, 'La ciudad es requerida')
+    .max(100, 'La ciudad no puede exceder 100 caracteres'),
+  postal_code: z.string()
+    .trim()
+    .min(4, 'El codigo postal debe tener al menos 4 caracteres')
+    .max(10, 'El codigo postal no puede exceder 10 caracteres'),
+  importer_status: z.string()
+    .max(100, 'El estado de importador no puede exceder 100 caracteres')
+    .optional()
+    .or(z.literal('')),
+
+  // Section 3 - Delivery Info
+  same_as_fiscal: z.boolean(),
+  delivery_address: z.string()
+    .trim()
+    .max(500, 'El domicilio de entrega no puede exceder 500 caracteres')
+    .optional()
+    .or(z.literal('')),
+  delivery_city: z.string()
+    .trim()
+    .max(100, 'La ciudad de entrega no puede exceder 100 caracteres')
+    .optional()
+    .or(z.literal('')),
+  delivery_postal_code: z.string()
+    .trim()
+    .max(10, 'El codigo postal de entrega no puede exceder 10 caracteres')
+    .optional()
+    .or(z.literal('')),
+  delivery_phone: z.string()
+    .trim()
+    .max(20, 'El telefono de contacto no puede exceder 20 caracteres')
+    .optional()
+    .or(z.literal('')),
+  delivery_hours: z.string()
+    .trim()
+    .max(100, 'Los horarios de entrega no pueden exceder 100 caracteres')
+    .optional()
+    .or(z.literal('')),
+}).refine((data) => {
+  // If delivery address is different from fiscal, require delivery fields
+  if (!data.same_as_fiscal) {
+    return !!(data.delivery_address && data.delivery_city && data.delivery_postal_code);
+  }
+  return true;
+}, {
+  message: 'Los campos de direccion de entrega son requeridos',
+  path: ['delivery_address'],
+});
+
+export type BuyerInfoFormData = z.infer<typeof buyerInfoSchema>;
