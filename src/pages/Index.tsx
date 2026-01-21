@@ -15,13 +15,18 @@ import { toast } from "sonner";
 import { handleError } from "@/lib/errorHandler";
 import { ProductCard } from "@/components/ProductCard";
 import { Footer } from "@/components/Footer";
+import { SEO } from "@/components/SEO";
+
 interface Product {
   id: string;
   name: string;
+  slug: string | null;
   description: string | null;
   price_unit: number;
   lead_time_production_days: number | null;
   moq?: number | null;
+  model?: string | null;
+  brand?: string | null;
   sku?: string | null;
   length_cm?: number | null;
   width_cm?: number | null;
@@ -56,6 +61,7 @@ const Index = () => {
     manufacturer: "",
     leadTime: ""
   });
+  const [displayCount, setDisplayCount] = useState(12);
   useEffect(() => {
     if (user && profile) {
       const dashboardMap = {
@@ -77,10 +83,13 @@ const Index = () => {
       } = await supabase.from("products").select(`
           id,
           name,
+          slug,
           description,
           price_unit,
           lead_time_production_days,
           moq,
+          model,
+          brand,
           sku,
           length_cm,
           width_cm,
@@ -94,7 +103,7 @@ const Index = () => {
           manufacturer_id
         `).eq("status", "active").order("created_at", {
         ascending: false
-      }).limit(9);
+      });
       if (error) throw error;
       const products = data || [];
 
@@ -179,16 +188,25 @@ const Index = () => {
       navigate("/auth/signup?role=buyer");
     }
   };
-  const handleProductView = (productId: string) => {
+  const handleProductView = (product: Product) => {
     trackEvent("product_viewed_public", {
-      product_id: productId
+      product_id: product.id
     });
-    navigate(`/products/${productId}`);
+    // Use slug if available for SEO-friendly URL
+    navigate(product.slug ? `/producto/${product.slug}` : `/products/${product.id}`);
   };
   if (user && profile) {
     return null;
   }
   return <div className="flex min-h-screen flex-col bg-background">
+      {/* SEO Meta Tags */}
+      <SEO
+        title="Plataforma D2B para Equipamiento Profesional"
+        description="LeanZupply conecta empresas europeas con fabricantes certificados. Compra maquinaria industrial, equipamiento para hostelería y más con precios FOB directos de fábrica."
+        canonical="https://leanzupply.com/"
+        type="website"
+      />
+
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
         <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
@@ -432,9 +450,31 @@ const Index = () => {
           {/* Products Grid */}
           {loading ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} className="h-96 w-full rounded-2xl" />)}
-            </div> : filteredProducts.length > 0 ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {filteredProducts.map(product => <ProductCard key={product.id} product={product} onClick={() => handleProductView(product.id)} showCategory={true} />)}
-            </div> : <Card className="border-border">
+            </div> : filteredProducts.length > 0 ? (
+            <>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {filteredProducts.slice(0, displayCount).map(product => <ProductCard key={product.id} product={product} onClick={() => handleProductView(product)} showCategory={true} />)}
+              </div>
+              {/* Ver más button */}
+              {filteredProducts.length > displayCount && (
+                <div className="flex justify-center mt-8">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => setDisplayCount(prev => prev + 12)}
+                    className="gap-2"
+                  >
+                    Ver más productos
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+              {/* Products count indicator */}
+              <p className="text-center text-sm text-muted-foreground mt-4">
+                Mostrando {Math.min(displayCount, filteredProducts.length)} de {filteredProducts.length} productos
+              </p>
+            </>
+          ) : <Card className="border-border">
               <CardContent className="py-16 text-center">
                 <Search className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
                 <p className="text-lg text-muted-foreground">

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ const TIMELINE_STEPS = [
 
 interface Order {
   id: string;
+  order_reference: string | null;
   product_id: string;
   quantity: number;
   total_price: number;
@@ -198,6 +200,11 @@ const BuyerOrders = () => {
                               <div className="flex-1 space-y-3">
                                 <div className="flex flex-col sm:flex-row items-start justify-between gap-2">
                                   <div className="flex-1 min-w-0">
+                                    {order.order_reference && (
+                                      <p className="text-xs font-mono text-primary mb-1">
+                                        {order.order_reference}
+                                      </p>
+                                    )}
                                     <h3 className="font-semibold text-base sm:text-lg text-foreground truncate">
                                       {order.product?.name || "Producto"}
                                     </h3>
@@ -276,6 +283,11 @@ const BuyerOrders = () => {
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
+                          {order.order_reference && (
+                            <p className="text-xs font-mono text-primary mb-1">
+                              {order.order_reference}
+                            </p>
+                          )}
                           <CardTitle className="text-lg text-foreground">{order.product?.name}</CardTitle>
                           <p className="text-sm text-muted-foreground mt-1">
                             {order.manufacturer?.company_name}
@@ -333,7 +345,14 @@ const BuyerOrders = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detalles del Pedido</DialogTitle>
+            <DialogTitle>
+              Detalles del Pedido
+              {selectedOrder?.order_reference && (
+                <span className="ml-2 text-primary font-mono">
+                  {selectedOrder.order_reference}
+                </span>
+              )}
+            </DialogTitle>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-6">
@@ -342,6 +361,12 @@ const BuyerOrders = () => {
                 <CardContent className="pt-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-3">
+                      {selectedOrder.order_reference && (
+                        <div>
+                          <Label className="text-muted-foreground">Referencia</Label>
+                          <p className="font-mono font-bold text-lg text-primary">{selectedOrder.order_reference}</p>
+                        </div>
+                      )}
                       <div>
                         <Label className="text-muted-foreground">Producto</Label>
                         <p className="font-semibold text-lg text-foreground">{selectedOrder.product?.name}</p>

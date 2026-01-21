@@ -17,8 +17,11 @@ import { CostBreakdown } from "@/components/CostBreakdown";
 import { LocalShippingCalculator } from "@/components/buyer/LocalShippingCalculator";
 import { ProfileCompletionModal } from "@/components/buyer/ProfileCompletionModal";
 import { GuestContactForm } from "@/components/buyer/GuestContactForm";
+import { BuyerInfoForm } from "@/components/buyer/BuyerInfoForm";
 import { LocalShippingCalculation } from "@/lib/localShippingCalculator";
 import { calculateOrderTotal } from "@/lib/priceCalculations";
+import { generateOrderReference } from "@/lib/orderReferenceGenerator";
+import { BuyerInfoFormData } from "@/lib/validationSchemas";
 import {
   GuestContactData,
   getEmptyGuestContactData,
@@ -91,6 +94,11 @@ export default function Checkout() {
     const saved = getGuestContactFromSession();
     return saved || getEmptyGuestContactData();
   });
+
+  // Buyer info form state (for authenticated users in normal checkout)
+  const [buyerInfoValid, setBuyerInfoValid] = useState(false);
+  const [buyerInfoData, setBuyerInfoData] = useState<BuyerInfoFormData | null>(null);
+  const [deliveryPostalCode, setDeliveryPostalCode] = useState<string>("");
   const [sessionId] = useState(() => {
     let sid = sessionStorage.getItem('session_id');
     if (!sid) {
@@ -253,14 +261,14 @@ export default function Checkout() {
     // Normal checkout flow (not quote mode) - requires authentication
     if (!user) return;
 
-    // Check if profile is complete before proceeding (skip if just completed modal)
-    if (!skipProfileCheck && !isProfileComplete()) {
-      setShowProfileModal(true);
+    // Check if buyer info form is valid
+    if (!buyerInfoValid || !buyerInfoData) {
+      toast.error("Por favor completa todos los campos requeridos del formulario");
       return;
     }
 
     if (quantity < product.moq) {
-      toast.error(`La cantidad mínima es ${product.moq} unidades`);
+      toast.error(`La cantidad minima es ${product.moq} unidades`);
       return;
     }
 
@@ -283,7 +291,7 @@ export default function Checkout() {
       if (error.errors) {
         error.errors.forEach((err: any) => toast.error(err.message));
       } else {
-        toast.error("Error de validación en el pedido");
+        toast.error("Error de validacion en el pedido");
       }
       return;
     }
@@ -291,6 +299,39 @@ export default function Checkout() {
     try {
       // Track payment initiated
       await trackStep('payment_initiated');
+
+      // Generate order reference
+      const orderReference = await generateOrderReference();
+
+      // Prepare buyer info snapshot for audit trail
+      const buyerInfoSnapshot = {
+        ...buyerInfoData,
+        captured_at: new Date().toISOString(),
+      };
+
+      // Update profile with buyer info if changed
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          tax_id: buyerInfoData.tax_id,
+          eori_number: buyerInfoData.eori_number || null,
+          mobile_phone: buyerInfoData.mobile_phone,
+          address: buyerInfoData.address,
+          city: buyerInfoData.city,
+          postal_code: buyerInfoData.postal_code,
+          importer_status: buyerInfoData.importer_status || null,
+          delivery_address: buyerInfoData.same_as_fiscal ? null : buyerInfoData.delivery_address,
+          delivery_city: buyerInfoData.same_as_fiscal ? null : buyerInfoData.delivery_city,
+          delivery_postal_code: buyerInfoData.same_as_fiscal ? null : buyerInfoData.delivery_postal_code,
+          delivery_phone: buyerInfoData.same_as_fiscal ? null : buyerInfoData.delivery_phone,
+          delivery_hours: buyerInfoData.same_as_fiscal ? null : buyerInfoData.delivery_hours,
+        })
+        .eq("id", user.id);
+
+      if (profileError) {
+        console.error("Error updating profile:", profileError);
+        // Continue with order creation even if profile update fails
+      }
 
       // Create order
       const {
@@ -307,13 +348,17 @@ export default function Checkout() {
           discount_8u: product.discount_8u,
           discount_10u: product.discount_10u
         }),
+        order_reference: orderReference,
         status: "pending",
         payment_status: "pending",
         tracking_stage: "created",
         buyer_notes: notes,
         session_id: sessionId,
-        calculation_snapshot: calculationSnapshot
+        calculation_snapshot: calculationSnapshot,
+        buyer_info_snapshot: buyerInfoSnapshot,
+        payment_amount: totalCost,
       }).select().single();
+
       if (orderError) {
         console.error("Order creation error:", orderError);
         throw new Error(orderError.message || "No se pudo crear el pedido");
@@ -321,10 +366,9 @@ export default function Checkout() {
 
       // Track order submission
       await trackStep('confirmed');
-      toast.success("¡Pedido enviado exitosamente!", {
-        duration: 5000
-      });
-      navigate(`/order-confirmation?orderId=${orderData.id}`);
+
+      // Navigate to payment instructions page instead of order confirmation
+      navigate(`/buyer/payment/${orderData.id}?showModal=true`);
     } catch (error: any) {
       console.error("Error creating order:", error);
       toast.error(error.message || "Error al procesar el pedido. Por favor intenta de nuevo.");
@@ -479,6 +523,19 @@ export default function Checkout() {
             />
           )}
 
+          {/* Buyer Info Form - Shown for authenticated users in normal checkout */}
+          {!isQuoteMode && user && (
+            <BuyerInfoForm
+              profile={profile}
+              userEmail={user.email}
+              onValidChange={(isValid, data) => {
+                setBuyerInfoValid(isValid);
+                setBuyerInfoData(data);
+              }}
+              onDeliveryPostalCodeChange={setDeliveryPostalCode}
+            />
+          )}
+
           {/* Envío Internacional - Siempre incluido */}
           <CostBreakdown productId={product.id} quantity={quantity} destinationCountry="spain" originPort={originPort || undefined} realTime={true} onCalculationComplete={calc => {
           setInternationalCost(calc.breakdown.total);
@@ -492,10 +549,14 @@ export default function Checkout() {
           setTotalCost(calc.breakdown.total + localCost);
         }} />
 
-          {/* Envío Local (España) - Siempre incluido */}
+          {/* Envio Local (Espana) - Siempre incluido */}
           <LocalShippingCalculator
             totalVolumeM3={(product.volume_m3 || 0) * quantity}
-            initialPostalCode={!user ? guestContactData.postalCode : profile?.postal_code || ""}
+            initialPostalCode={
+              !user
+                ? guestContactData.postalCode
+                : (deliveryPostalCode || profile?.postal_code || "")
+            }
             onCalculationComplete={calc => {
           if (calc) {
             setLocalShippingCalc(calc);
@@ -641,22 +702,25 @@ export default function Checkout() {
                   submitting ||
                   quantity < product.moq ||
                   totalCost === 0 ||
-                  (isQuoteMode && !user && !isGuestContactValid(guestContactData))
+                  (isQuoteMode && !user && !isGuestContactValid(guestContactData)) ||
+                  (!isQuoteMode && user && !buyerInfoValid)
                 }
               >
                 {submitting
-                  ? "Enviando solicitud..."
+                  ? "Procesando..."
                   : isQuoteMode
                     ? "Solicitar Propuesta"
-                    : "Solicitar Propuesta Final"
+                    : "Proceder al Pago"
                 }
               </Button>
 
-              <p className="text-xs text-center text-muted-foreground">
-                Esta solicitud no implica pago ni compra confirmada
-              </p>
+              {isQuoteMode && (
+                <p className="text-xs text-center text-muted-foreground">
+                  Esta solicitud no implica pago ni compra confirmada
+                </p>
+              )}
               <p className="text-xs text-center text-muted-foreground mt-1">
-                Al enviar, aceptas nuestros términos y condiciones de servicio
+                Al enviar, aceptas nuestros terminos y condiciones de servicio
               </p>
             </CardContent>
           </Card>

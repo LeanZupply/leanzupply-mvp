@@ -11,6 +11,8 @@ interface ProductCardProps {
     description?: string | null;
     price_unit: number;
     moq?: number;
+    model?: string | null;
+    brand?: string | null;
     lead_time_production_days?: number | null;
     lead_time_logistics_days?: number | null;
     images?: any;
@@ -112,7 +114,17 @@ const ProductCardComponent = ({
         <h3 className="text-sm font-medium text-foreground truncate">
           {product.name}
         </h3>
-        
+
+        {/* Model and Manufacturer Brand */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          {product.model && (
+            <span><span className="font-medium text-foreground">Modelo:</span> {product.model}</span>
+          )}
+          {product.manufacturer?.registered_brand && (
+            <span><span className="font-medium text-foreground">Marca:</span> {product.manufacturer.registered_brand}</span>
+          )}
+        </div>
+
         <p className="text-xs text-muted-foreground line-clamp-3 min-h-[3rem]">
           {truncateText(product.description, 120)}
         </p>
@@ -159,13 +171,13 @@ const ProductCardComponent = ({
         <div className="flex justify-between items-end pt-3">
           <div>
             <span className="text-2xl font-bold text-primary">
-              €{product.price_unit.toLocaleString("es-ES")}
+              €{product.price_unit.toLocaleString("es-ES")} <span className="text-sm font-semibold">FOB</span>
             </span>
             <span className="text-xs text-muted-foreground block mt-0.5">
               EUR por unidad
             </span>
           </div>
-          
+
           {product.moq && <Badge variant="outline" className="flex items-center gap-1">
               <Package className="h-3 w-3" />
               <span>MOQ: {product.moq}</span>

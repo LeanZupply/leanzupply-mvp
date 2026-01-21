@@ -236,10 +236,17 @@ export function QuoteRequestModal({
                   htmlFor="quote-terms"
                   className="text-sm font-medium leading-none cursor-pointer"
                 >
-                  Acepto recibir información comercial
+                  Acepto los terminos y condiciones
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Autorizo a LeanZupply a contactarme sobre este producto y otras ofertas relacionadas.
+                  Autorizo a LeanZupply a contactarme sobre este producto y acepto los{" "}
+                  <a href="/legal/terminos" className="text-primary underline hover:no-underline" target="_blank" rel="noopener noreferrer">
+                    terminos y condiciones
+                  </a>{" "}
+                  y la{" "}
+                  <a href="/legal/privacidad" className="text-primary underline hover:no-underline" target="_blank" rel="noopener noreferrer">
+                    politica de privacidad
+                  </a>.
                 </p>
               </div>
             </div>

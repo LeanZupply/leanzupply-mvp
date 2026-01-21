@@ -26,7 +26,7 @@ export function GuestContactForm({
   const formContent = (
     <>
       <p className="text-sm text-muted-foreground mb-4">
-        Introduce tus datos para que podamos enviarte la propuesta comercial.
+        Introduce tus datos antes de avanzar.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -84,11 +84,11 @@ export function GuestContactForm({
         />
         <Label htmlFor="guest-terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
           Declaro que los datos proporcionados corresponden a una empresa legalmente registrada y activa, y acepto los{" "}
-          <a href="/terms" className="text-primary underline hover:no-underline" target="_blank">
+          <a href="/legal/terminos" className="text-primary underline hover:no-underline" target="_blank" rel="noopener noreferrer">
             terminos y condiciones
           </a>{" "}
           y la{" "}
-          <a href="/privacy" className="text-primary underline hover:no-underline" target="_blank">
+          <a href="/legal/privacidad" className="text-primary underline hover:no-underline" target="_blank" rel="noopener noreferrer">
             politica de privacidad
           </a>.
         </Label>

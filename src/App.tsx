@@ -3,12 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CookieBanner } from "@/components/CookieBanner";
 import { lazy, Suspense } from "react";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { OrganizationSchema } from "@/components/OrganizationSchema";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -45,11 +47,16 @@ const BuyerProfile = lazy(() => import("./pages/buyer/BuyerProfile"));
 const BuyerNotifications = lazy(() => import("./pages/buyer/BuyerNotifications"));
 const Checkout = lazy(() => import("./pages/buyer/Checkout"));
 const OrderConfirmation = lazy(() => import("./pages/buyer/OrderConfirmation"));
+const PaymentInstructions = lazy(() => import("./pages/buyer/PaymentInstructions"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 
 // Lazy load legal pages
 const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
 const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
+const TermsAndConditions = lazy(() => import("./pages/legal/TermsAndConditions"));
+
+// Lazy load SEO pages
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,13 +70,15 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <CookieConsentProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
+  <HelmetProvider>
+    <OrganizationSchema />
+    <QueryClientProvider client={queryClient}>
+      <CookieConsentProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth/login" element={<Login />} />
@@ -80,7 +89,11 @@ const App = () => (
               {/* Legal Pages (Public Routes) */}
               <Route path="/legal/privacidad" element={<Suspense fallback={<LoadingScreen />}><PrivacyPolicy /></Suspense>} />
               <Route path="/legal/cookies" element={<Suspense fallback={<LoadingScreen />}><CookiePolicy /></Suspense>} />
-            
+              <Route path="/legal/terminos" element={<Suspense fallback={<LoadingScreen />}><TermsAndConditions /></Suspense>} />
+
+              {/* Category Page (Public SEO Route) */}
+              <Route path="/categoria/:slug" element={<Suspense fallback={<LoadingScreen />}><CategoryPage /></Suspense>} />
+
             {/* Superadmin Routes */}
             <Route path="/superadmin" element={<ProtectedRoute allowedRoles={["superadmin"]}><Suspense fallback={<LoadingScreen />}><SuperadminDashboard /></Suspense></ProtectedRoute>} />
             <Route path="/superadmin/overview" element={<ProtectedRoute allowedRoles={["superadmin"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><SuperadminOverview /></Suspense></DashboardLayout></ProtectedRoute>} />
@@ -104,7 +117,10 @@ const App = () => (
             <Route path="/manufacturer/orders" element={<ProtectedRoute allowedRoles={["manufacturer"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><ManufacturerOrders /></Suspense></DashboardLayout></ProtectedRoute>} />
             <Route path="/manufacturer/profile" element={<ProtectedRoute allowedRoles={["manufacturer"]}><DashboardLayout><Suspense fallback={<LoadingScreen />}><ManufacturerProfile /></Suspense></DashboardLayout></ProtectedRoute>} />
 
-            {/* Product Detail (Public Route) */}
+            {/* Product Detail (Public Routes) */}
+            {/* New SEO-friendly route */}
+            <Route path="/producto/:id" element={<Suspense fallback={<LoadingScreen />}><ProductDetail /></Suspense>} />
+            {/* Legacy UUID routes - will redirect to SEO-friendly URL if product has slug */}
             <Route path="/product/:id" element={<Suspense fallback={<LoadingScreen />}><ProductDetail /></Suspense>} />
             <Route path="/products/:id" element={<Suspense fallback={<LoadingScreen />}><ProductDetail /></Suspense>} />
 
@@ -118,15 +134,17 @@ const App = () => (
             {/* Checkout Flow - handles auth internally (allows guests for quote mode) */}
             <Route path="/checkout/:productId" element={<Suspense fallback={<LoadingScreen />}><Checkout /></Suspense>} />
             <Route path="/order-confirmation" element={<Suspense fallback={<LoadingScreen />}><OrderConfirmation /></Suspense>} />
+            <Route path="/buyer/payment/:orderId" element={<ProtectedRoute allowedRoles={["buyer"]}><Suspense fallback={<LoadingScreen />}><PaymentInstructions /></Suspense></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
             </Routes>
-            <CookieBanner />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </CookieConsentProvider>
-  </QueryClientProvider>
+              <CookieBanner />
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </CookieConsentProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;
