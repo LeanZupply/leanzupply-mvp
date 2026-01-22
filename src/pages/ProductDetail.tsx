@@ -206,11 +206,11 @@ export default function ProductDetail() {
     trackOrderClick();
 
     if (!user) {
-      // Redirect to signup with return path
-      navigate(`/auth/signup?redirect_to=/checkout/${id}`);
+      // Redirect to signup with return path (use product.id UUID, not URL slug)
+      navigate(`/auth/signup?redirect_to=/checkout/${product?.id}`);
     } else {
-      // Go directly to checkout
-      navigate(`/checkout/${id}`);
+      // Go directly to checkout (use product.id UUID, not URL slug)
+      navigate(`/checkout/${product?.id}`);
     }
   };
 
@@ -221,7 +221,8 @@ export default function ProductDetail() {
         ...guestContactData,
         quantity: costQuantity,
       });
-      navigate(`/checkout/${id}`);
+      // Use product.id UUID (not URL slug) and add ?quote=true for guest checkout
+      navigate(`/checkout/${product?.id}?quote=true`);
     } else {
       // Authenticated user: check if profile is complete
       const isComplete = profile?.mobile_phone &&
@@ -230,8 +231,8 @@ export default function ProductDetail() {
                          profile?.is_professional_business === true;
 
       if (isComplete) {
-        // Profile complete: go directly to checkout
-        navigate(`/checkout/${id}`);
+        // Profile complete: go directly to checkout (use product.id UUID, not URL slug)
+        navigate(`/checkout/${product?.id}`);
       } else {
         // Profile incomplete: show ProfileCompletionModal first
         setProfileModalOpen(true);
@@ -241,8 +242,8 @@ export default function ProductDetail() {
 
   const handleProfileComplete = () => {
     setProfileModalOpen(false);
-    // After profile is complete, navigate to checkout
-    navigate(`/checkout/${id}`);
+    // After profile is complete, navigate to checkout (use product.id UUID, not URL slug)
+    navigate(`/checkout/${product?.id}`);
   };
 
   const fetchProduct = async () => {
