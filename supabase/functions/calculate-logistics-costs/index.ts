@@ -355,8 +355,8 @@ Deno.serve(async (req) => {
     const maritime_min_days = transitInfo ? transitInfo.min_days : 30;
     const maritime_max_days = transitInfo ? transitInfo.max_days : 35;
     
-    const customs_clearance_days_min = 5; // Estimado mínimo estándar
-    const customs_clearance_days_max = 7; // Estimado máximo estándar
+    const customs_clearance_days_min = 2; // Tránsito puerto destino a domicilio (mínimo)
+    const customs_clearance_days_max = 5; // Tránsito puerto destino a domicilio (máximo)
     
     console.log('[CALC] Timeline components:', {
       production_days,
