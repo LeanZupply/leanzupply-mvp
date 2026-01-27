@@ -57,6 +57,7 @@ const TermsAndConditions = lazy(() => import("./pages/legal/TermsAndConditions")
 
 // Lazy load SEO pages
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+const CatalogPage = lazy(() => import("./pages/CatalogPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,6 +94,7 @@ const App = () => (
 
               {/* Category Page (Public SEO Route) */}
               <Route path="/categoria/:slug" element={<Suspense fallback={<LoadingScreen />}><CategoryPage /></Suspense>} />
+              <Route path="/catalogo" element={<Suspense fallback={<LoadingScreen />}><CatalogPage /></Suspense>} />
 
             {/* Superadmin Routes */}
             <Route path="/superadmin" element={<ProtectedRoute allowedRoles={["superadmin"]}><Suspense fallback={<LoadingScreen />}><SuperadminDashboard /></Suspense></ProtectedRoute>} />

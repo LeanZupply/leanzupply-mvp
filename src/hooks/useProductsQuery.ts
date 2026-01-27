@@ -17,6 +17,7 @@ export const useProductsQuery = (options: ProductsQueryOptions = {}) => {
         .from("products")
         .select(`
           id,
+          slug,
           name,
           category,
           subcategory,
