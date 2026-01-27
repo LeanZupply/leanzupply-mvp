@@ -18,7 +18,7 @@ export const Footer = ({ onCTAClick }: FooterProps) => {
   return (
     <footer className="border-t border-border bg-muted/50 px-4 py-12">
       <div className="container mx-auto">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5 mb-8">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-8">
           {/* Brand column */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -74,25 +74,7 @@ export const Footer = ({ onCTAClick }: FooterProps) => {
             </ul>
           </div>
 
-          {/* Support column */}
-          <div className="space-y-4">
-            <h5 className="font-semibold">Soporte</h5>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>Documentacion requerida a Compradores</li>
-              <li>Documentacion requerida a Fabricantes</li>
-              <li>Incoterm soportado: FOB</li>
-              <li>
-                <Link
-                  to="/legal/terminos"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Terminos y Condiciones Generales
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal column - NEW */}
+          {/* Legal column */}
           <div className="space-y-4">
             <h5 className="font-semibold">Legal</h5>
             <ul className="space-y-2 text-sm text-muted-foreground">

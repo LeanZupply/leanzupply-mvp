@@ -115,13 +115,13 @@ const ProductCardComponent = ({
           {product.name}
         </h3>
 
-        {/* Model and Manufacturer Brand */}
+        {/* Model and Brand */}
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {product.model && (
             <span><span className="font-medium text-foreground">Modelo:</span> {product.model}</span>
           )}
-          {product.manufacturer?.registered_brand && (
-            <span><span className="font-medium text-foreground">Marca:</span> {product.manufacturer.registered_brand}</span>
+          {product.brand && (
+            <span><span className="font-medium text-foreground">Marca:</span> {product.brand}</span>
           )}
         </div>
 

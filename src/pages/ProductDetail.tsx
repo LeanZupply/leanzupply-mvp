@@ -20,6 +20,7 @@ import { SEO } from "@/components/SEO";
 import { BreadcrumbNav } from "@/components/BreadcrumbNav";
 import { isUUID } from "@/lib/slugify";
 import { getCategorySlug } from "@/lib/categories";
+import { buildProductSeoTitle, buildProductSeoDescription, buildProductJsonLd } from "@/lib/seoHelpers";
 import {
   ArrowLeft,
   Building2,
@@ -205,11 +206,11 @@ export default function ProductDetail() {
     trackOrderClick();
 
     if (!user) {
-      // Redirect to signup with return path
-      navigate(`/auth/signup?redirect_to=/checkout/${id}`);
+      // Redirect to signup with return path (use product.id UUID, not URL slug)
+      navigate(`/auth/signup?redirect_to=/checkout/${product?.id}`);
     } else {
-      // Go directly to checkout
-      navigate(`/checkout/${id}`);
+      // Go directly to checkout (use product.id UUID, not URL slug)
+      navigate(`/checkout/${product?.id}`);
     }
   };
 
@@ -220,7 +221,8 @@ export default function ProductDetail() {
         ...guestContactData,
         quantity: costQuantity,
       });
-      navigate(`/checkout/${id}`);
+      // Use product.id UUID (not URL slug) and add ?quote=true for guest checkout
+      navigate(`/checkout/${product?.id}?quote=true`);
     } else {
       // Authenticated user: check if profile is complete
       const isComplete = profile?.mobile_phone &&
@@ -229,8 +231,8 @@ export default function ProductDetail() {
                          profile?.is_professional_business === true;
 
       if (isComplete) {
-        // Profile complete: go directly to checkout
-        navigate(`/checkout/${id}`);
+        // Profile complete: go directly to checkout (use product.id UUID, not URL slug)
+        navigate(`/checkout/${product?.id}`);
       } else {
         // Profile incomplete: show ProfileCompletionModal first
         setProfileModalOpen(true);
@@ -240,8 +242,8 @@ export default function ProductDetail() {
 
   const handleProfileComplete = () => {
     setProfileModalOpen(false);
-    // After profile is complete, navigate to checkout
-    navigate(`/checkout/${id}`);
+    // After profile is complete, navigate to checkout (use product.id UUID, not URL slug)
+    navigate(`/checkout/${product?.id}`);
   };
 
   const fetchProduct = async () => {
@@ -427,44 +429,38 @@ export default function ProductDetail() {
   const categorySlug = getCategorySlug(product.category);
   const productImages = parseImages(product.images);
   const productImage = productImages[0]?.url;
-  const truncatedDescription = product.description
-    ? product.description.substring(0, 160)
-    : `Compra ${product.name} de fabricantes certificados en LeanZupply. Precio FOB directo de fábrica.`;
+  const productUrl = `https://leanzupply.com/producto/${productSlug}`;
 
-  // JSON-LD structured data for product
-  const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": product.name,
-    "description": product.description || truncatedDescription,
-    "image": productImages.map(img => img.url),
-    "sku": product.sku || product.id,
-    "brand": manufacturer ? {
-      "@type": "Organization",
-      "name": manufacturer.registered_brand
-    } : undefined,
-    "category": product.category,
-    "offers": {
-      "@type": "Offer",
-      "priceCurrency": "EUR",
-      "price": product.price_unit,
-      "availability": product.stock > 0
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-      "seller": manufacturer ? {
-        "@type": "Organization",
-        "name": manufacturer.registered_brand
-      } : undefined
-    }
-  };
+  // Build SEO-optimized title and description using helpers
+  const seoTitle = buildProductSeoTitle({
+    name: product.name,
+    brand: product.brand,
+    model: product.model,
+    category: product.category,
+  });
+
+  const seoDescription = buildProductSeoDescription({
+    description: product.description,
+    name: product.name,
+    brand: product.brand,
+    model: product.model,
+    category: product.category,
+  });
+
+  // JSON-LD structured data for product (with mpn and manufacturer)
+  const productJsonLd = buildProductJsonLd({
+    product: { ...product, images: productImages },
+    manufacturer,
+    productUrl,
+  });
 
   return (
     <div className="min-h-screen bg-background">
       {/* SEO Meta Tags */}
       <SEO
-        title={`${product.name} - ${product.category}`}
-        description={truncatedDescription}
-        canonical={`https://leanzupply.com/producto/${productSlug}`}
+        title={seoTitle}
+        description={seoDescription}
+        canonical={productUrl}
         ogImage={productImage}
         type="product"
       />
