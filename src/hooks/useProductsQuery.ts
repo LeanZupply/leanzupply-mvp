@@ -26,6 +26,8 @@ export const useProductsQuery = (options: ProductsQueryOptions = {}) => {
           stock,
           status,
           images,
+          model,
+          brand,
           lead_time_production_days,
           views_count,
           material,

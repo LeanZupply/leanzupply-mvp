@@ -29,6 +29,8 @@ interface Product {
   price_unit: number;
   moq: number;
   stock: number;
+  model?: string | null;
+  brand?: string | null;
   images: any;
   lead_time_production_days: number | null;
   discount_3u?: number | null;
