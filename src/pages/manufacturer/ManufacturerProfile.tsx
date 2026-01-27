@@ -19,6 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { trackFormSubmission, FORM_NAMES } from "@/lib/gtmEvents";
 import { Progress } from "@/components/ui/progress";
 import { PRODUCT_CATEGORIES } from "@/lib/categories";
+import { compressImage, getManufacturerPhotoCompressionOptions, validateFileSize } from "@/lib/imageCompression";
 
 const profileSchema = z.object({
   legal_name: z.string().min(1, "Razón social es requerida").max(200),
@@ -117,7 +118,7 @@ export default function ManufacturerProfile() {
           ...data,
           english_level: data.english_level as "básico" | "intermedio" | "fluido" | "alta capacidad",
         };
-        reset(formData as any);
+        reset(formData as ProfileFormData);
         setLogoPreview(data.brand_logo_url || "");
         setCertifications(data.certifications || []);
         setProductSectors(data.product_sectors || []);
@@ -186,11 +187,15 @@ export default function ManufacturerProfile() {
 
     setUploadingPhoto(true);
     try {
-      const uploadPromises = files.map(file => {
-        if (file.size > 5 * 1024 * 1024) {
-          throw new Error(`El archivo ${file.name} supera los 5MB`);
-        }
-        return uploadPhoto(file, category);
+      // Compress images before uploading
+      const compressedFiles = await Promise.all(
+        files.map(file => compressImage(file, getManufacturerPhotoCompressionOptions()))
+      );
+      
+      const uploadPromises = compressedFiles.map(compressedFile => {
+        // Validate file size after compression (bucket limit is 10MB, but we target 500KB)
+        validateFileSize(compressedFile, 10, "foto");
+        return uploadPhoto(compressedFile, category);
       });
 
       const urls = await Promise.all(uploadPromises);
@@ -337,6 +342,7 @@ export default function ManufacturerProfile() {
       
       // Scroll to top to show success
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Error saving profile:", error);
       const message = error?.message || handleError("Profile save", error);
@@ -808,7 +814,7 @@ export default function ManufacturerProfile() {
 
             <div className="space-y-2">
               <Label htmlFor="english_level">Nivel de Inglés *</Label>
-              <Select onValueChange={(value) => setValue("english_level", value as any)} defaultValue={watch("english_level")}>
+              <Select onValueChange={(value) => setValue("english_level", value as "básico" | "intermedio" | "fluido" | "alta capacidad")} defaultValue={watch("english_level")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona nivel" />
                 </SelectTrigger>

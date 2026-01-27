@@ -16,6 +16,8 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { calculateOrderTotal, getApplicableDiscount } from "@/lib/priceCalculations";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { compressImage, getProductImageCompressionOptions, validateFileSize } from "@/lib/imageCompression";
+import { ZodError } from "zod";
 
 interface ProductImage {
   url: string;
@@ -81,12 +83,6 @@ export default function ProductEdit() {
   const [certifications, setCertifications] = useState<Certificate[]>([]);
   const [technicalDocs, setTechnicalDocs] = useState<Certificate[]>([]);
 
-  useEffect(() => {
-    if (id) {
-      fetchProduct();
-    }
-  }, [id]);
-
   const fetchProduct = async () => {
     try {
       const { data, error } = await supabase
@@ -139,7 +135,7 @@ export default function ProductEdit() {
       });
 
       // Parse images - handle both array and JSON string
-      const parseImages = (images: any): ProductImage[] => {
+      const parseImages = (images: unknown): ProductImage[] => {
         if (!images) return [];
         if (Array.isArray(images)) return images as ProductImage[];
         if (typeof images === 'string') {
@@ -154,7 +150,7 @@ export default function ProductEdit() {
       };
 
       // Parse certifications and technical docs
-      const parseDocs = (docs: any): Certificate[] => {
+      const parseDocs = (docs: unknown): Certificate[] => {
         if (!docs) return [];
         if (Array.isArray(docs)) return docs as Certificate[];
         if (typeof docs === 'string') {
@@ -179,6 +175,13 @@ export default function ProductEdit() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (id && user) {
+      fetchProduct();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user]);
 
   const uploadToBucket = async (
     bucket: "product-images" | "product-docs",
@@ -207,9 +210,21 @@ export default function ProductEdit() {
 
     setUploadingImages(true);
     try {
-      const uploadPromises = Array.from(files).map(async (file) => {
-        const url = await uploadToBucket("product-images", file);
-        return { url, alt: file.name };
+      // Compress images before uploading
+      toast.info("Comprimiendo imágenes...");
+      const compressedFiles = await Promise.all(
+        Array.from(files).map(file => 
+          compressImage(file, getProductImageCompressionOptions())
+        )
+      );
+      
+      toast.info("Subiendo imágenes comprimidas...");
+      const uploadPromises = compressedFiles.map(async (compressedFile, index) => {
+        // Validate file size after compression (bucket limit is 5MB, but we target 150KB)
+        validateFileSize(compressedFile, 5, "archivo de imagen");
+        
+        const url = await uploadToBucket("product-images", compressedFile);
+        return { url, alt: files[index].name };
       });
 
       const newImages = await Promise.all(uploadPromises);
@@ -298,9 +313,9 @@ export default function ProductEdit() {
       };
       
       productSchema.parse(validationData);
-    } catch (error: any) {
-      if (error.errors) {
-        error.errors.forEach((err: any) => toast.error(err.message));
+    } catch (error: unknown) {
+      if (error instanceof ZodError) {
+        error.errors.forEach((err) => toast.error(err.message));
       } else {
         toast.error("Error de validación en los datos del producto");
       }
@@ -360,7 +375,7 @@ export default function ProductEdit() {
 
       toast.success("Producto actualizado correctamente");
       navigate("/manufacturer/products");
-    } catch (error: any) {
+    } catch (error: unknown) {
       const message = handleError("Product update", error);
       toast.error(message);
     } finally {
