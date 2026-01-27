@@ -401,7 +401,9 @@ export default function Checkout() {
         </Button>
 
         <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">
-          {isQuoteMode ? "Solicitud de Propuesta Final" : "Confirmar Pedido"}
+          {isQuoteMode
+            ? (user ? "Solicitud de Propuesta Final" : "Vista Detalle Pedido")
+            : "Confirmar Pedido"}
         </h1>
 
         <div className="space-y-6 sm:space-y-8">
