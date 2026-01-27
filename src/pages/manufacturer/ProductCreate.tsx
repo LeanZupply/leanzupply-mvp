@@ -19,6 +19,8 @@ import { calculateOrderTotal, getApplicableDiscount } from "@/lib/priceCalculati
 import { DollarSign } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { compressImage, getProductImageCompressionOptions, validateFileSize } from "@/lib/imageCompression";
+import { ZodError } from "zod";
 interface ProductImage {
   url: string;
   alt: string;
@@ -45,6 +47,7 @@ export default function ProductCreate() {
     if (user) {
       checkManufacturerProfile();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
   const checkManufacturerProfile = async () => {
     try {
@@ -137,11 +140,23 @@ export default function ProductCreate() {
     if (!files || files.length === 0) return;
     setUploadingImages(true);
     try {
-      const uploadPromises = Array.from(files).map(async file => {
-        const url = await uploadToBucket("product-images", file);
+      // Compress images before uploading
+      toast.info("Comprimiendo imágenes...");
+      const compressedFiles = await Promise.all(
+        Array.from(files).map(file => 
+          compressImage(file, getProductImageCompressionOptions())
+        )
+      );
+      
+      toast.info("Subiendo imágenes comprimidas...");
+      const uploadPromises = compressedFiles.map(async (compressedFile, index) => {
+        // Validate file size after compression (bucket limit is 5MB, but we target 150KB)
+        validateFileSize(compressedFile, 5, "archivo de imagen");
+        
+        const url = await uploadToBucket("product-images", compressedFile);
         return {
           url,
-          alt: file.name
+          alt: files[index].name
         };
       });
       const newImages = await Promise.all(uploadPromises);
@@ -227,9 +242,9 @@ export default function ProductCreate() {
         model: formData.model || undefined
       };
       productSchema.parse(validationData);
-    } catch (error: any) {
-      if (error.errors) {
-        error.errors.forEach((err: any) => toast.error(err.message));
+    } catch (error: unknown) {
+      if (error instanceof ZodError) {
+        error.errors.forEach((err) => toast.error(err.message));
       } else {
         toast.error("Error de validación en los datos del producto");
       }
@@ -247,7 +262,7 @@ export default function ProductCreate() {
         category: formData.category,
         subcategory: formData.subcategory?.trim() || null,
         description: formData.description?.trim() || null,
-        images: images.length > 0 ? images : [],
+        images: images.length > 0 ? JSON.stringify(images) : JSON.stringify([]),
         // Dimensiones NETO
         length_cm: formData.length_cm ? Number(formData.length_cm) : null,
         width_cm: formData.width_cm ? Number(formData.width_cm) : null,
@@ -266,8 +281,8 @@ export default function ProductCreate() {
         transport_notes: formData.transport_notes?.trim() || null,
         hs_code: formData.hs_code?.trim() || null,
         // Documentación
-        certifications: certifications.length > 0 ? certifications : [],
-        technical_docs: technicalDocs.length > 0 ? technicalDocs : [],
+        certifications: certifications.length > 0 ? JSON.stringify(certifications) : JSON.stringify([]),
+        technical_docs: technicalDocs.length > 0 ? JSON.stringify(technicalDocs) : JSON.stringify([]),
         // Precio y disponibilidad
         price_unit: Number(formData.price_unit),
         // Nota: "condition" en la DB corresponde al estado del producto (new/used), no al INCOTERM
@@ -290,7 +305,7 @@ export default function ProductCreate() {
       const {
         data,
         error
-      } = await supabase.from("products").insert(payload as any).select("id").maybeSingle();
+      } = await supabase.from("products").insert(payload).select("id").maybeSingle();
       if (error) {
         console.error("Database error:", error);
         throw error;
@@ -301,7 +316,7 @@ export default function ProductCreate() {
 
       toast.success("Tu producto fue enviado para revisión. Te notificaremos cuando sea aprobado.");
       navigate("/manufacturer/products");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Product creation error:", error);
       const message = handleError("Product creation", error);
       toast.error(message || "Error al crear el producto. Verifica todos los campos.");
