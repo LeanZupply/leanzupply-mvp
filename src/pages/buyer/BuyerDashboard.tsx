@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
 import { handleError } from "@/lib/errorHandler";
+import { formatNumber } from "@/lib/formatters";
 
 interface DashboardStats {
   totalOrders: number;
@@ -193,7 +194,7 @@ const BuyerDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground">
-              €{stats.totalSpent.toLocaleString("es-ES")}
+              €{formatNumber(stats.totalSpent)}
             </div>
             <p className="text-xs text-muted-foreground mt-2">Histórico de compras</p>
           </CardContent>
@@ -266,7 +267,7 @@ const BuyerDashboard = () => {
                   <div className="flex-1">
                     <p className="font-medium text-foreground">{order.product?.name || "Producto"}</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {order.quantity} unidades • €{Number(order.total_price).toLocaleString("es-ES")}
+                      {order.quantity} unidades • €{formatNumber(Number(order.total_price))}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {new Date(order.created_at).toLocaleDateString("es-ES", {

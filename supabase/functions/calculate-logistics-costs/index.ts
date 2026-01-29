@@ -314,37 +314,51 @@ Deno.serve(async (req) => {
     const insurance = Math.round(insurance_base * (parameters.marine_insurance_percentage / 100) * 100) / 100;
     console.log('[CALC] Insurance calculated:', insurance, { insurance_base, rate: parameters.marine_insurance_percentage });
 
-    // 8. Calcular CIF (Cost, Insurance, Freight) 
+    // 8. Calcular CIF (Cost, Insurance, Freight)
     const cif = Math.round((fob + freight + insurance) * 100) / 100;
     console.log('[CALC] CIF calculated:', cif);
 
-    // 9. Calcular Base Imponible (CIF + Gastos Origen + Gastos Destino)
+    // 8.5. Subtotal envío marítimo (freight + insurance, sin FOB)
+    const subtotal_maritime_shipping = Math.round((freight + insurance) * 100) / 100;
+    console.log('[CALC] Subtotal maritime shipping:', subtotal_maritime_shipping);
+
+    // 9. Calcular Gastos Destino
     // El costo variable de destino se multiplica por volumen (€/m³)
     const destination_variable_total = Math.round(parameters.destination_variable_cost * total_volume_m3 * 100) / 100;
     const destination_fixed_cost = parameters.destination_fixed_cost;
     const dua_cost = parameters.dua_cost;
     const destination_expenses = destination_variable_total + destination_fixed_cost + dua_cost;
+
+    // Legacy: taxable_base kept for backward compatibility with stored snapshots
     const taxable_base = Math.round((cif + origin_expenses + destination_expenses) * 100) / 100;
-    console.log('[CALC] Taxable base calculated:', taxable_base, { cif, origin_expenses, destination_variable_total, destination_fixed_cost, dua_cost, destination_expenses });
+    console.log('[CALC] Taxable base (legacy):', taxable_base, { cif, origin_expenses, destination_variable_total, destination_fixed_cost, dua_cost, destination_expenses });
 
-    // 10. Calcular Arancel (sobre la base imponible)
+    // 10. Calcular Arancel — base EXCLUDES DUA (FOB + freight + insurance + dest_variable + dest_fixed)
     const tariff_rate = parameters.tariff_percentage;
-    const tariff = Math.round(taxable_base * (tariff_rate / 100) * 100) / 100;
-    console.log('[CALC] Tariff calculated:', tariff, { taxable_base, tariff_rate });
+    const tariff_base = Math.round((fob + freight + insurance + destination_variable_total + destination_fixed_cost) * 100) / 100;
+    const tariff = Math.round(tariff_base * (tariff_rate / 100) * 100) / 100;
+    console.log('[CALC] Tariff calculated:', tariff, { tariff_base, tariff_rate });
 
-    // 11. Calcular IVA (sobre base imponible + arancel)
-    const vat_base = Math.round((taxable_base + tariff) * 100) / 100;
+    // 11. Calcular IVA — base = FOB + DUA + dest_fixed + dest_variable + subtotal_maritime + aranceles
+    const vat_base = Math.round((fob + dua_cost + destination_fixed_cost + destination_variable_total + subtotal_maritime_shipping + tariff) * 100) / 100;
     const vat = Math.round(vat_base * (parameters.vat_percentage / 100) * 100) / 100;
     console.log('[CALC] VAT calculated:', vat, { vat_base, vat_rate: parameters.vat_percentage });
 
-    // 11. Calcular subtotales intermedios
-    const subtotal_shipping_taxes = Math.round((freight + insurance + destination_expenses + tariff + vat) * 100) / 100;
+    // 12. Calcular subtotales intermedios
+    // subtotal_int_imp = IVA + aranceles + DUA + dest_fixed + dest_variable + subtotal_maritime
+    const subtotal_int_imp = Math.round((vat + tariff + dua_cost + destination_fixed_cost + destination_variable_total + subtotal_maritime_shipping) * 100) / 100;
+
+    // Legacy fields kept for backward compatibility
+    const subtotal_shipping_taxes = subtotal_int_imp;
     const total_without_taxes = Math.round((fob + freight + insurance + destination_expenses) * 100) / 100;
+
+    // Buyer fee — base INCLUDES taxes: (FOB + subtotal_int_imp) * 2%
     const buyer_fee_percentage = 2;
-    const buyer_fee = Math.round(total_without_taxes * (buyer_fee_percentage / 100) * 100) / 100;
-    
-    // 12. Calcular Total Final
-    const total = Math.round((taxable_base + tariff + vat + buyer_fee) * 100) / 100;
+    const buyer_fee_base = Math.round((fob + subtotal_int_imp) * 100) / 100;
+    const buyer_fee = Math.round(buyer_fee_base * (buyer_fee_percentage / 100) * 100) / 100;
+
+    // 13. Calcular Total Final = buyer_fee + subtotal_int_imp + FOB
+    const total = Math.round((buyer_fee + subtotal_int_imp + fob) * 100) / 100;
     console.log('[CALC] Final total:', total);
 
     // 11.5. Calcular timeline de entrega completo
@@ -425,15 +439,20 @@ Deno.serve(async (req) => {
         origin_expenses,
         cif,
         insurance,
+        subtotal_maritime_shipping,
         destination_variable_total,
         destination_fixed_cost,
         dua_cost,
         destination_expenses,
         taxable_base,
+        tariff_base,
         tariff,
+        vat_base,
         vat,
+        subtotal_int_imp,
         subtotal_shipping_taxes,
         total_without_taxes,
+        buyer_fee_base,
         buyer_fee,
         buyer_fee_percentage,
         total,

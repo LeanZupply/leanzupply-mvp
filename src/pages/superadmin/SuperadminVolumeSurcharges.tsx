@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2, Package, AlertCircle, FileText } from "lucide-react";
+import { formatNumber } from "@/lib/formatters";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface VolumeSurcharge {
@@ -340,12 +341,12 @@ export default function SuperadminVolumeSurcharges() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">
-                        {surcharge.min_volume.toFixed(2)} - {surcharge.max_volume ? surcharge.max_volume.toFixed(2) : "∞"}
+                        {formatNumber(surcharge.min_volume)} - {surcharge.max_volume ? formatNumber(surcharge.max_volume) : "∞"}
                       </Badge>
                     </div>
                   </TableCell>
                   <TableCell className="font-semibold">
-                    €{surcharge.surcharge_amount.toFixed(2)}
+                    €{formatNumber(surcharge.surcharge_amount)}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
                     {surcharge.description || "—"}

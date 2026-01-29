@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { TrendingUp, Ship, DollarSign, Percent, Info, Clock, AlertTriangle, Package, Truck, Anchor, FileCheck } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { TrendingUp, Ship, DollarSign, Percent, Info, Clock, AlertTriangle, Package, Truck, Anchor, FileCheck, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatCurrency, formatPercent, formatNumber } from "@/lib/formatters";
 interface CostBreakdownProps {
   // Modo legacy (valores precalculados)
   priceUnit?: number;
@@ -64,17 +66,7 @@ export const CostBreakdown = ({
   const [calculation, setCalculation] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const formatCurrency = (value: number | null | undefined) => {
-    if (value === null || value === undefined) return "€0,00";
-    return `€${value.toLocaleString("es-ES", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })}`;
-  };
-  const formatPercent = (value: number | null | undefined) => {
-    if (value === null || value === undefined) return "0%";
-    return `${value}%`;
-  };
+  const [breakdownOpen, setBreakdownOpen] = useState(false);
 
   // Calcular en tiempo real si está habilitado
   useEffect(() => {
@@ -129,6 +121,7 @@ export const CostBreakdown = ({
     cif: calculation.breakdown.cif,
     insuranceCost: calculation.breakdown.insurance,
     insurancePercentage: calculation.parameters.marine_insurance_percentage,
+    subtotalMaritimeShipping: calculation.breakdown.subtotal_maritime_shipping,
     destinationVariableTotal: calculation.breakdown.destination_variable_total,
     destinationVariableCostPerM3: calculation.parameters.destination_variable_cost,
     destinationFixedCost: calculation.breakdown.destination_fixed_cost,
@@ -140,6 +133,7 @@ export const CostBreakdown = ({
     vatCost: calculation.breakdown.vat,
     vatPercentage: calculation.parameters.vat_percentage,
     subtotalShippingTaxes: calculation.breakdown.subtotal_shipping_taxes,
+    subtotalIntImp: calculation.breakdown.subtotal_int_imp,
     totalWithoutTaxes: calculation.breakdown.total_without_taxes,
     buyerFee: calculation.breakdown.buyer_fee,
     buyerFeePercentage: calculation.breakdown.buyer_fee_percentage,
@@ -233,7 +227,7 @@ export const CostBreakdown = ({
           <div className="space-y-2">
             <h4 className="font-semibold flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Precio Base
+              Precio base fábrica
             </h4>
             <div className="space-y-1 pl-6">
               <div className="flex justify-between text-sm">
@@ -265,146 +259,171 @@ export const CostBreakdown = ({
 
           <Separator />
 
-          {/* Shipping Costs */}
-          <div className="space-y-2">
-            <h4 className="font-semibold flex items-center gap-2">
-              <Ship className="h-4 w-4" />
-              Costos de Envío
-            </h4>
-            <div className="space-y-1 pl-6">
-              <div className="flex justify-between text-sm">
-                <Tooltip>
-                  <TooltipTrigger className="flex items-center gap-1">
-                    <span className="text-muted-foreground">Transporte marítimo base:</span>
-                    <Info className="h-3 w-3" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">
-                      {calculation?.transit_info ? `Tarifa para ${calculation.transit_info.origin_port} → ${calculation.transit_info.destination_port}` : 'Costo de transporte marítimo por volumen'}
-                    </p>
-                    {calculation && 'totalVolumeM3' in displayValues && 'freightCostPerM3' in displayValues && displayValues.totalVolumeM3 && displayValues.freightCostPerM3 && <p className="text-xs">{displayValues.totalVolumeM3.toFixed(3)} m³ × €{displayValues.freightCostPerM3.toFixed(2)}/m³ = €{(displayValues.totalVolumeM3 * displayValues.freightCostPerM3).toFixed(2)}</p>}
-                  </TooltipContent>
-                </Tooltip>
-                <span className="font-medium">
-                  {calculation && 'freightBase' in displayValues ? formatCurrency(displayValues.freightBase) : formatCurrency(displayValues.freightCost)}
-                </span>
-              </div>
-              
-              {displayValues.originExpenses > 0 && <div className="flex justify-between text-sm text-muted-foreground">
-                  <Tooltip>
-                    <TooltipTrigger className="flex items-center gap-1">
-                      <span>Gastos Origen:</span>
-                      <Info className="h-3 w-3" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs text-yellow-600">No mostrar ahora, luego con EXW conditions</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <span>{formatCurrency(displayValues.originExpenses)}</span>
-                </div>}
-              <div className="flex justify-between text-sm font-medium pt-1 border-t">
-                <Tooltip>
-                  <TooltipTrigger className="flex items-center gap-1">
-                    <span>Subtotal con envío marítimo:</span>
-                    <Info className="h-3 w-3" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">FOB + Flete + Gastos origen</p>
-                  </TooltipContent>
-                </Tooltip>
-                <span>{formatCurrency(displayValues.cif)}</span>
-              </div>
-              <div className="flex justify-between text-sm mt-2">
-                <Tooltip>
-                  <TooltipTrigger className="flex items-center gap-1">
-                    <span className="text-muted-foreground">Seguro marítimo:</span>
-                    <Info className="h-3 w-3" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">Seguro calculado sobre CIF (FOB + Flete + Gastos origen)</p>
-                    {calculation && 'insurancePercentage' in displayValues && displayValues.insurancePercentage && 'cif' in displayValues && <p className="text-xs">
-                        {formatCurrency(displayValues.cif)} × {displayValues.insurancePercentage}% = {formatCurrency(displayValues.insuranceCost)}
-                      </p>}
-                  </TooltipContent>
-                </Tooltip>
-                <span className="font-medium">{formatCurrency(displayValues.insuranceCost)}</span>
-              </div>
-              {calculation && 'destinationVariableTotal' in displayValues && displayValues.destinationVariableTotal !== undefined && <>
-                  <div className="flex justify-between text-sm">
-                    <Tooltip>
-                      <TooltipTrigger className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Gastos destino variable:</span>
-                        <Info className="h-3 w-3" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {'totalVolumeM3' in displayValues && 'destinationVariableCostPerM3' in displayValues && displayValues.totalVolumeM3 && displayValues.destinationVariableCostPerM3 && <p className="text-xs">{displayValues.totalVolumeM3.toFixed(3)} m³ × €{displayValues.destinationVariableCostPerM3.toFixed(2)}/m³</p>}
-                      </TooltipContent>
-                    </Tooltip>
-                    <span className="font-medium">{formatCurrency(displayValues.destinationVariableTotal)}</span>
+          {/* Collapsible: Coste envío internacional + impuestos */}
+          {calculation && 'subtotalShippingTaxes' in displayValues && displayValues.subtotalShippingTaxes !== undefined ? (
+            <Collapsible open={breakdownOpen} onOpenChange={setBreakdownOpen}>
+              <CollapsibleTrigger className="w-full">
+                <div className="flex justify-between items-center py-2 bg-yellow-50 dark:bg-yellow-950/20 px-3 rounded-lg cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-950/30 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <ChevronDown className={`h-4 w-4 text-yellow-600 transition-transform ${breakdownOpen ? 'rotate-180' : ''}`} />
+                    <span className="font-semibold text-yellow-800 dark:text-yellow-200">Coste envío internacional + impuestos:</span>
                   </div>
-                  {'destinationFixedCost' in displayValues && displayValues.destinationFixedCost !== undefined && <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Gastos destino fijo:</span>
-                      <span className="font-medium">{formatCurrency(displayValues.destinationFixedCost)}</span>
-                    </div>}
-                  {'duaCost' in displayValues && displayValues.duaCost !== undefined && <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">DUA:</span>
-                      <span className="font-medium">{formatCurrency(displayValues.duaCost)}</span>
-                    </div>}
-                </>}
-            </div>
-          </div>
+                  <span className="text-lg font-bold text-yellow-800 dark:text-yellow-200">
+                    {formatCurrency(displayValues.subtotalShippingTaxes)}
+                  </span>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="space-y-4 pt-4">
+                  {/* Shipping Costs */}
+                  <div className="space-y-2">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <Ship className="h-4 w-4" />
+                      Costos de Envío
+                    </h4>
+                    <div className="space-y-1 pl-6">
+                      <div className="flex justify-between text-sm">
+                        <Tooltip>
+                          <TooltipTrigger className="flex items-center gap-1">
+                            <span className="text-muted-foreground">Transporte marítimo base:</span>
+                            <Info className="h-3 w-3" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">
+                              {calculation?.transit_info ? `Tarifa para ${calculation.transit_info.origin_port} → ${calculation.transit_info.destination_port}` : 'Costo de transporte marítimo por volumen'}
+                            </p>
+                            {'totalVolumeM3' in displayValues && 'freightCostPerM3' in displayValues && displayValues.totalVolumeM3 && displayValues.freightCostPerM3 && <p className="text-xs">{formatNumber(displayValues.totalVolumeM3, 3, 3)} m³ × €{formatNumber(displayValues.freightCostPerM3)}/m³ = €{formatNumber(displayValues.totalVolumeM3 * displayValues.freightCostPerM3)}</p>}
+                          </TooltipContent>
+                        </Tooltip>
+                        <span className="font-medium">
+                          {'freightBase' in displayValues ? formatCurrency(displayValues.freightBase) : formatCurrency(displayValues.freightCost)}
+                        </span>
+                      </div>
 
-          <Separator />
+                      <div className="flex justify-between text-sm">
+                        <Tooltip>
+                          <TooltipTrigger className="flex items-center gap-1">
+                            <span className="text-muted-foreground">Seguro marítimo ({formatPercent('insurancePercentage' in displayValues ? displayValues.insurancePercentage : null)}):</span>
+                            <Info className="h-3 w-3" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Seguro calculado sobre FOB + Flete</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <span className="font-medium">{formatCurrency(displayValues.insuranceCost)}</span>
+                      </div>
 
-          {/* Taxes */}
-          <div className="space-y-2">
-            <h4 className="font-semibold flex items-center gap-2">
-              <Percent className="h-4 w-4" />
-              Impuestos
-            </h4>
-            <div className="space-y-1 pl-6">
-              <div className="flex justify-between text-sm">
-                <Tooltip>
-                  <TooltipTrigger className="flex items-center gap-1">
-                    <span className="text-muted-foreground">Base imponible:</span>
-                    <Info className="h-3 w-3" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">CIF + Seguro + Gastos destino</p>
-                  </TooltipContent>
-                </Tooltip>
-                <span className="font-medium">{formatCurrency(displayValues.taxableBase)}</span>
+                      {/* Subtotal envío marítimo */}
+                      {'subtotalMaritimeShipping' in displayValues && displayValues.subtotalMaritimeShipping !== undefined && (
+                        <div className="flex justify-between text-sm font-medium pt-1 border-t">
+                          <span>Subtotal envío marítimo:</span>
+                          <span>{formatCurrency(displayValues.subtotalMaritimeShipping)}</span>
+                        </div>
+                      )}
+
+                      {'destinationVariableTotal' in displayValues && displayValues.destinationVariableTotal !== undefined && <>
+                          <div className="flex justify-between text-sm mt-2">
+                            <Tooltip>
+                              <TooltipTrigger className="flex items-center gap-1">
+                                <span className="text-muted-foreground">Gastos destino variable:</span>
+                                <Info className="h-3 w-3" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {'totalVolumeM3' in displayValues && 'destinationVariableCostPerM3' in displayValues && displayValues.totalVolumeM3 && displayValues.destinationVariableCostPerM3 && <p className="text-xs">{formatNumber(displayValues.totalVolumeM3, 3, 3)} m³ × €{formatNumber(displayValues.destinationVariableCostPerM3)}/m³</p>}
+                              </TooltipContent>
+                            </Tooltip>
+                            <span className="font-medium">{formatCurrency(displayValues.destinationVariableTotal)}</span>
+                          </div>
+                          {'destinationFixedCost' in displayValues && displayValues.destinationFixedCost !== undefined && <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Gastos destino fijo:</span>
+                              <span className="font-medium">{formatCurrency(displayValues.destinationFixedCost)}</span>
+                            </div>}
+                          {'duaCost' in displayValues && displayValues.duaCost !== undefined && <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">DUA:</span>
+                              <span className="font-medium">{formatCurrency(displayValues.duaCost)}</span>
+                            </div>}
+                        </>}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Taxes */}
+                  <div className="space-y-2">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <Percent className="h-4 w-4" />
+                      Impuestos
+                    </h4>
+                    <div className="space-y-1 pl-6">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          Arancel ({formatPercent(displayValues.tariffPercentage)}):
+                        </span>
+                        <span className="font-medium">{formatCurrency(displayValues.tariffCost)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <Tooltip>
+                          <TooltipTrigger className="flex items-center gap-1">
+                            <span className="text-muted-foreground">IVA importación (recuperable) ({formatPercent(displayValues.vatPercentage)}):</span>
+                            <Info className="h-3 w-3" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">El IVA es recuperable según situación fiscal del comprador.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <span className="font-medium">{formatCurrency(displayValues.vatCost)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            /* Legacy mode: show flat breakdown without collapsible */
+            <>
+              {/* Shipping Costs */}
+              <div className="space-y-2">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Ship className="h-4 w-4" />
+                  Costos de Envío
+                </h4>
+                <div className="space-y-1 pl-6">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Transporte marítimo:</span>
+                    <span className="font-medium">{formatCurrency(displayValues.freightCost)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Seguro marítimo:</span>
+                    <span className="font-medium">{formatCurrency(displayValues.insuranceCost)}</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  Arancel ({formatPercent(displayValues.tariffPercentage)}):
-                </span>
-                <span className="font-medium">{formatCurrency(displayValues.tariffCost)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">IVA ({formatPercent(displayValues.vatPercentage)}):</span>
-                <span className="font-medium">{formatCurrency(displayValues.vatCost)}</span>
-              </div>
-            </div>
-          </div>
 
-          <Separator />
+              <Separator />
 
-          {/* Subtotal envío int + imp */}
-          {calculation && 'subtotalShippingTaxes' in displayValues && displayValues.subtotalShippingTaxes !== undefined && <div className="flex justify-between items-center py-2 bg-yellow-50 dark:bg-yellow-950/20 px-3 rounded-lg">
-              <Tooltip>
-                <TooltipTrigger className="flex items-center gap-1">
-                  <span className="font-semibold text-yellow-800 dark:text-yellow-200">Subtotal envío int + imp:</span>
-                  <Info className="h-4 w-4 text-yellow-600" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">Flete + Seguro + Gastos destino + Arancel + IVA</p>
-                </TooltipContent>
-              </Tooltip>
-              <span className="text-lg font-bold text-yellow-800 dark:text-yellow-200">
-                {formatCurrency(displayValues.subtotalShippingTaxes)}
-              </span>
-            </div>}
+              {/* Taxes */}
+              <div className="space-y-2">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Percent className="h-4 w-4" />
+                  Impuestos
+                </h4>
+                <div className="space-y-1 pl-6">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Arancel ({formatPercent(displayValues.tariffPercentage)}):
+                    </span>
+                    <span className="font-medium">{formatCurrency(displayValues.tariffCost)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">IVA importación (recuperable) ({formatPercent(displayValues.vatPercentage)}):</span>
+                    <span className="font-medium">{formatCurrency(displayValues.vatCost)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+            </>
+          )}
 
           {/* Fee al comprador */}
           {calculation && 'buyerFee' in displayValues && 'buyerFeePercentage' in displayValues && displayValues.buyerFee !== undefined && displayValues.buyerFeePercentage !== undefined && <div className="flex justify-between text-sm py-1">
@@ -424,7 +443,15 @@ export const CostBreakdown = ({
 
           {/* Total final a pagar */}
           <div className="flex justify-between items-center pt-2 bg-green-50 dark:bg-green-950/20 px-3 py-3 rounded-lg">
-            <span className="text-lg font-bold text-green-800 dark:text-green-200">Total final a pagar:</span>
+            <Tooltip>
+              <TooltipTrigger className="flex items-center gap-1">
+                <span className="text-lg font-bold text-green-800 dark:text-green-200">Total final a pagar:</span>
+                <Info className="h-4 w-4 text-green-600" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">El precio total incluye transporte internacional, despacho, aranceles e IVA de importación.</p>
+              </TooltipContent>
+            </Tooltip>
             <span className="text-2xl font-bold text-green-700 dark:text-green-300">
               {formatCurrency(displayValues.totalCostWithTaxes)}
             </span>
@@ -447,15 +474,14 @@ export const CostBreakdown = ({
               <p className="text-xs text-muted-foreground text-center pt-2">
                 Calculado automáticamente para {calculation.destination_country.toUpperCase()}
               </p>
-              
-              {/* Información de tránsito */}
+
               {/* Timeline de entrega completo */}
               {calculation.delivery_timeline && <div className="mt-4 pt-4 border-t">
                   <div className="flex items-center gap-2 mb-3">
                     <Clock className="h-5 w-5 text-primary" />
                     <h4 className="font-semibold">Tiempos de Entrega Estimados</h4>
                   </div>
-                  
+
                   <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                     <div className="space-y-3">
                       {/* Producción */}
@@ -536,7 +562,7 @@ export const CostBreakdown = ({
 
                       {/* Total */}
                       <div className="flex items-center justify-between pt-2">
-                        <span className="text-base font-bold text-primary">⏱️ TOTAL ESTIMADO:</span>
+                        <span className="text-base font-bold text-primary">TOTAL ESTIMADO:</span>
                         <span className="text-xl font-bold text-primary">
                           {calculation.delivery_timeline.total_min_days} - {calculation.delivery_timeline.total_max_days} días
                         </span>
@@ -561,7 +587,7 @@ export const CostBreakdown = ({
                     {calculation.delivery_timeline.production_days > 60 && <Alert className="mt-3 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
                         <Info className="h-4 w-4 text-blue-600" />
                         <AlertDescription className="ml-2 text-xs text-blue-900 dark:text-blue-100">
-                          <strong>Tiempo de producción extendido:</strong> Este producto requiere más de 2 meses de fabricación. 
+                          <strong>Tiempo de producción extendido:</strong> Este producto requiere más de 2 meses de fabricación.
                           Planifica tu pedido con anticipación.
                         </AlertDescription>
                       </Alert>}

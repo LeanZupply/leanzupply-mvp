@@ -48,6 +48,7 @@ import { handleError } from "@/lib/errorHandler";
 import { ProductCard } from "@/components/ProductCard";
 import { CostBreakdown } from "@/components/CostBreakdown";
 import { calculateOrderTotal } from "@/lib/priceCalculations";
+import { formatNumber } from "@/lib/formatters";
 import { ProfileCompletionModal } from "@/components/buyer/ProfileCompletionModal";
 import { GuestContactForm } from "@/components/buyer/GuestContactForm";
 import {
@@ -734,9 +735,9 @@ export default function ProductDetail() {
                 <div className="flex items-baseline justify-between">
                   <div>
                     <span className="text-4xl font-bold text-primary">
-                      €{product.price_unit.toLocaleString("es-ES")}
+                      €{formatNumber(product.price_unit)}
                     </span>
-                    <span className="text-muted-foreground ml-2">EUR/unidad</span>
+                    <span className="text-muted-foreground ml-2">EUR/unidad FOB</span>
                   </div>
                   {product.stock > 0 && (
                     <Badge variant="default" className="bg-green-500/10 text-green-600 border-green-500/20">
@@ -1073,7 +1074,7 @@ export default function ProductDetail() {
             <div className="bg-muted p-4 rounded-lg space-y-2">
               <div className="flex justify-between">
                 <span>Precio unitario:</span>
-                <span className="font-medium">€{product.price_unit}</span>
+                <span className="font-medium">€{formatNumber(product.price_unit)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Cantidad:</span>
@@ -1081,12 +1082,12 @@ export default function ProductDetail() {
               </div>
               <div className="flex justify-between text-lg font-bold border-t border-border pt-2">
                 <span>Total:</span>
-                <span className="text-primary">€{calculateOrderTotal(product.price_unit, orderQuantity, {
+                <span className="text-primary">€{formatNumber(calculateOrderTotal(product.price_unit, orderQuantity, {
                   discount_3u: product.discount_3u,
                   discount_5u: product.discount_5u,
                   discount_8u: product.discount_8u,
                   discount_10u: product.discount_10u,
-                }).toLocaleString()}</span>
+                }))}</span>
               </div>
             </div>
             <Button onClick={handleOrder} className="w-full">Confirmar Solicitud</Button>

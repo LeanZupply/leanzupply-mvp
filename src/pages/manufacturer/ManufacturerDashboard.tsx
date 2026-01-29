@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Package, ShoppingCart, AlertCircle, FileText, TrendingUp } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { handleError } from "@/lib/errorHandler";
+import { formatCurrency } from "@/lib/formatters";
 
 interface DashboardStats {
   totalOrders: number;
@@ -319,7 +320,7 @@ const ManufacturerDashboard = () => {
                       </TableCell>
                       <TableCell>{order.products?.name || "—"}</TableCell>
                       <TableCell className="text-right">{order.quantity}</TableCell>
-                      <TableCell className="text-right">€{order.total_price.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(order.total_price)}</TableCell>
                       <TableCell>{getOrderStatusBadge(order.status)}</TableCell>
                       <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
                     </TableRow>

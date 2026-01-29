@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, Building2, MapPin, Package, Truck } from "lucide-react";
 import { memo } from "react";
 import { optimizeImageURL } from "@/hooks/useOptimizedImage";
+import { formatNumber } from "@/lib/formatters";
 interface ProductCardProps {
   product: {
     id: string;
@@ -171,7 +172,7 @@ const ProductCardComponent = ({
         <div className="flex justify-between items-end pt-3">
           <div>
             <span className="text-2xl font-bold text-primary">
-              €{product.price_unit.toLocaleString("es-ES")} <span className="text-sm font-semibold">FOB</span>
+              €{formatNumber(product.price_unit)} <span className="text-sm font-semibold">FOB</span>
             </span>
             <span className="text-xs text-muted-foreground block mt-0.5">
               EUR por unidad

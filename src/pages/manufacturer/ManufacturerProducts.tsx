@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Package, Plus, Search, Trash2, Eye, Edit, AlertCircle, FileText } from "lucide-react";
 import { handleError } from "@/lib/errorHandler";
 import { downloadFile, normalizeProductDocPath } from "@/lib/storage";
+import { formatCurrency } from "@/lib/formatters";
 
 interface Product {
   id: string;
@@ -306,7 +307,7 @@ const ManufacturerProducts = () => {
                     {/* <TableCell className="hidden sm:table-cell text-sm">{product.sku || "—"}</TableCell> */}
                     <TableCell className="hidden md:table-cell text-sm">{product.category}</TableCell>
                     <TableCell className="text-right text-sm">{product.moq}</TableCell>
-                    <TableCell className="text-right text-sm whitespace-nowrap">€{product.price_unit.toFixed(2)}</TableCell>
+                    <TableCell className="text-right text-sm whitespace-nowrap">{formatCurrency(product.price_unit)}</TableCell>
                     <TableCell className="hidden lg:table-cell text-right text-sm">{product.stock}</TableCell>
                     <TableCell>{getStatusBadge(product.status)}</TableCell>
                     <TableCell className="text-right">
@@ -383,7 +384,7 @@ const ManufacturerProducts = () => {
                   )}
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Precio Unitario</p>
-                    <p className="text-base font-semibold">€{selectedProduct.price_unit.toFixed(2)}</p>
+                    <p className="text-base font-semibold">{formatCurrency(selectedProduct.price_unit)}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">MOQ</p>

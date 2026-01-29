@@ -24,6 +24,7 @@ import { OrderTimeline } from "@/components/buyer/OrderTimeline";
 import { OrderTrackingTimeline } from "@/components/buyer/OrderTrackingTimeline";
 import { trackEvent } from "@/lib/analytics";
 import { handleError } from "@/lib/errorHandler";
+import { formatNumber } from "@/lib/formatters";
 
 const TIMELINE_STEPS = [
   { key: "created", label: "Pedido Creado" },
@@ -226,7 +227,7 @@ const BuyerOrders = () => {
                                   <div>
                                     <p className="text-xs text-muted-foreground">Total</p>
                                     <p className="font-semibold text-sm text-primary">
-                                      €{Number(order.total_price).toLocaleString("es-ES")}
+                                      €{formatNumber(Number(order.total_price))}
                                     </p>
                                   </div>
                                   <div>
@@ -308,7 +309,7 @@ const BuyerOrders = () => {
                         <div>
                           <p className="text-muted-foreground">Total</p>
                           <p className="font-semibold text-primary">
-                            €{Number(order.total_price).toLocaleString("es-ES")}
+                            €{formatNumber(Number(order.total_price))}
                           </p>
                         </div>
                       </div>
@@ -399,7 +400,7 @@ const BuyerOrders = () => {
                       <div>
                         <Label className="text-muted-foreground">Total</Label>
                         <p className="font-bold text-3xl text-primary">
-                          €{Number(selectedOrder.total_price).toLocaleString("es-ES")}
+                          €{formatNumber(Number(selectedOrder.total_price))}
                         </p>
                       </div>
                       <div>

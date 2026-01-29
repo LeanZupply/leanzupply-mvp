@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { formatNumber } from "@/lib/formatters";
 
 interface PostalCodeRange {
   start: string;
@@ -150,8 +151,8 @@ export async function calculateLocalShipping(
       zone_name: zone?.name || "Zona no detectada",
       zone_description: zone?.description || "",
       base_price: zonePrice,
-      volume_range: volumeSurcharge 
-        ? `${volumeSurcharge.min_volume.toFixed(2)} - ${volumeSurcharge.max_volume?.toFixed(2) || "∞"} m³`
+      volume_range: volumeSurcharge
+        ? `${formatNumber(volumeSurcharge.min_volume)} - ${volumeSurcharge.max_volume != null ? formatNumber(volumeSurcharge.max_volume) : "∞"} m³`
         : "No aplicable",
       surcharge: surchargeAmount,
     },

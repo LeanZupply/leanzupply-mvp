@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Package, TrendingUp, AlertTriangle, CheckCircle, FileText } from "lucide-react";
 import { calculateLocalShipping, isSpanishPostalCode, LocalShippingCalculation } from "@/lib/localShippingCalculator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatCurrency, formatNumber } from "@/lib/formatters";
 
 interface LocalShippingCalculatorProps {
   totalVolumeM3: number;
@@ -84,9 +85,6 @@ export function LocalShippingCalculator({
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return `€${value.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
 
   return (
     <TooltipProvider>
@@ -123,7 +121,7 @@ export function LocalShippingCalculator({
               <Package className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">Volumen total del pedido:</span>
             </div>
-            <span className="font-semibold">{totalVolumeM3.toFixed(3)} m³</span>
+            <span className="font-semibold">{formatNumber(totalVolumeM3, 3, 3)} m³</span>
           </div>
 
           {loading && (

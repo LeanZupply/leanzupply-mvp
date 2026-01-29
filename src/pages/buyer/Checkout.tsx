@@ -20,6 +20,7 @@ import { GuestContactForm } from "@/components/buyer/GuestContactForm";
 import { BuyerInfoForm } from "@/components/buyer/BuyerInfoForm";
 import { LocalShippingCalculation } from "@/lib/localShippingCalculator";
 import { calculateOrderTotal } from "@/lib/priceCalculations";
+import { formatNumber } from "@/lib/formatters";
 import { generateOrderReference } from "@/lib/orderReferenceGenerator";
 import { BuyerInfoFormData } from "@/lib/validationSchemas";
 import {
@@ -84,10 +85,10 @@ export default function Checkout() {
   const [notes, setNotes] = useState("");
   const [originPort, setOriginPort] = useState<string>("");
   const [selectedDestinationPort, setSelectedDestinationPort] = useState<string>("");
-  const [totalCost, setTotalCost] = useState(0);
   const [calculationSnapshot, setCalculationSnapshot] = useState<any>(null);
   const [localShippingCalc, setLocalShippingCalc] = useState<LocalShippingCalculation | null>(null);
   const [internationalCost, setInternationalCost] = useState(0);
+  const totalCost = internationalCost + (localShippingCalc?.total_local_shipping || 0);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Guest form state (for non-authenticated users in quote mode)
@@ -427,7 +428,7 @@ export default function Checkout() {
                     {product.description}
                   </p>
                   <p className="text-base sm:text-lg font-bold text-primary mt-2">
-                    €{product.price_unit.toLocaleString("es-ES")} <span className="text-xs sm:text-sm font-normal">EUR/unidad</span>
+                    €{formatNumber(product.price_unit)} <span className="text-xs sm:text-sm font-normal">EUR/unidad</span>
                   </p>
                 </div>
               </div>
@@ -545,13 +546,9 @@ export default function Checkout() {
           <CostBreakdown productId={product.id} quantity={quantity} destinationCountry="spain" originPort={originPort || undefined} realTime={true} onCalculationComplete={calc => {
           setInternationalCost(calc.breakdown.total);
           setCalculationSnapshot(calc);
-          // Guardar el puerto destino seleccionado automáticamente
           if (calc.transit_info?.destination_port) {
             setSelectedDestinationPort(calc.transit_info.destination_port);
           }
-          // Sumar internacional + local
-          const localCost = localShippingCalc?.total_local_shipping || 0;
-          setTotalCost(calc.breakdown.total + localCost);
         }} />
 
           {/* Envio Local (Espana) - Siempre incluido */}
@@ -563,14 +560,7 @@ export default function Checkout() {
                 : (deliveryPostalCode || profile?.postal_code || "")
             }
             onCalculationComplete={calc => {
-          if (calc) {
-            setLocalShippingCalc(calc);
-            // Sumar internacional + local
-            setTotalCost(internationalCost + calc.total_local_shipping);
-          } else {
-            setLocalShippingCalc(null);
-            setTotalCost(internationalCost);
-          }
+          setLocalShippingCalc(calc || null);
         }} />
 
           {/* Payment Summary - DESPUÉS del desglose */}
@@ -587,10 +577,7 @@ export default function Checkout() {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Envío internacional + impuestos</span>
                       <span className="font-medium">
-                        €{internationalCost.toLocaleString("es-ES", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}
+                        €{formatNumber(internationalCost)}
                       </span>
                     </div>
                     {localShippingCalc && <div className="flex justify-between text-sm">
@@ -598,20 +585,14 @@ export default function Checkout() {
                           Envío local ({localShippingCalc.zone?.name || 'Pendiente CP'})
                         </span>
                         <span className="font-medium">
-                          €{localShippingCalc.total_local_shipping.toLocaleString("es-ES", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}
+                          €{formatNumber(localShippingCalc.total_local_shipping)}
                         </span>
                       </div>}
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total a Pagar</span>
                       <span className="text-primary">
-                        €{totalCost.toLocaleString("es-ES", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}
+                        €{formatNumber(totalCost)}
                       </span>
                     </div>
                   </>}

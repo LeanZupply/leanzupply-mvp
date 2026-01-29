@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { handleError } from "@/lib/errorHandler";
+import { formatCurrency, formatVolume } from "@/lib/formatters";
 
 interface QuoteRequest {
   id: string;
@@ -170,15 +171,6 @@ const SuperadminQuoteRequests = () => {
     }
   };
 
-  const formatCurrency = (value: number | undefined | null) => {
-    if (value == null) return "—";
-    return `€${value.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-
-  const formatVolume = (value: number | undefined | null) => {
-    if (value == null) return "—";
-    return `${value.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m³`;
-  };
 
   if (loading) {
     return (
@@ -319,7 +311,7 @@ const SuperadminQuoteRequests = () => {
                     {request.quantity || "—"}
                   </TableCell>
                   <TableCell className="text-right hidden md:table-cell text-sm font-medium">
-                    {formatCurrency(request.calculation_snapshot?.breakdown?.total)}
+                    {request.calculation_snapshot?.breakdown?.total != null ? formatCurrency(request.calculation_snapshot.breakdown.total) : "—"}
                   </TableCell>
                   <TableCell className="text-right hidden lg:table-cell text-sm">
                     {formatVolume(request.calculation_snapshot?.breakdown?.total_volume_m3)}

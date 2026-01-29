@@ -17,6 +17,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatNumber } from "@/lib/formatters";
 
 // Hardcoded bank details for Next Trade Global Limited
 const BANK_DETAILS = {
@@ -80,10 +81,7 @@ export function BankTransferModal({
       return;
     }
 
-    const formattedAmount = totalAmount.toLocaleString("es-ES", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+    const formattedAmount = formatNumber(totalAmount);
 
     const currentDate = new Date().toLocaleDateString("es-ES", {
       day: "2-digit",
@@ -479,10 +477,7 @@ export function BankTransferModal({
             <div className="bg-primary rounded-lg p-4 text-center mt-3">
               <p className="text-sm text-primary-foreground/80">Importe a transferir</p>
               <p className="text-2xl font-bold text-primary-foreground">
-                EUR {totalAmount.toLocaleString("es-ES", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                EUR {formatNumber(totalAmount)}
               </p>
             </div>
           </div>

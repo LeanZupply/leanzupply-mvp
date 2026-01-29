@@ -14,6 +14,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatNumber } from "@/lib/formatters";
 import { BankTransferModal } from "@/components/buyer/BankTransferModal";
 
 interface Order {
@@ -168,10 +169,7 @@ export default function PaymentInstructions() {
               <span className="text-muted-foreground">Importe total</span>
               <span className="font-bold text-xl">
                 EUR{" "}
-                {order.total_price.toLocaleString("es-ES", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {formatNumber(order.total_price)}
               </span>
             </div>
             <Separator />

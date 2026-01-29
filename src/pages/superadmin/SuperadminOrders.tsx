@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { handleError } from "@/lib/errorHandler";
+import { formatNumber } from "@/lib/formatters";
 
 interface Order {
   id: string;
@@ -185,7 +186,7 @@ const SuperadminOrders = () => {
                   <TableCell>{order.manufacturer?.company_name}</TableCell>
                   <TableCell>{order.product?.name}</TableCell>
                   <TableCell>{order.quantity}</TableCell>
-                  <TableCell>€{order.total_price.toLocaleString("es-ES")}</TableCell>
+                  <TableCell>€{formatNumber(order.total_price)}</TableCell>
                   <TableCell>
                     <Select
                       value={order.status}
@@ -266,7 +267,7 @@ const SuperadminOrders = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground/70 mb-1">Total Price</p>
-                  <p className="font-medium">€{selectedOrder.total_price.toLocaleString("es-ES")}</p>
+                  <p className="font-medium">€{formatNumber(selectedOrder.total_price)}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground/70 mb-1">Incoterm</p>
