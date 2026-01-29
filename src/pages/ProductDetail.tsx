@@ -232,7 +232,7 @@ export default function ProductDetail() {
 
       if (isComplete) {
         // Profile complete: go directly to checkout (use product.id UUID, not URL slug)
-        navigate(`/checkout/${product?.id}`);
+        navigate(`/checkout/${product?.id}?qty=${costQuantity}`);
       } else {
         // Profile incomplete: show ProfileCompletionModal first
         setProfileModalOpen(true);
@@ -243,7 +243,7 @@ export default function ProductDetail() {
   const handleProfileComplete = () => {
     setProfileModalOpen(false);
     // After profile is complete, navigate to checkout (use product.id UUID, not URL slug)
-    navigate(`/checkout/${product?.id}`);
+    navigate(`/checkout/${product?.id}?qty=${costQuantity}`);
   };
 
   const fetchProduct = async () => {

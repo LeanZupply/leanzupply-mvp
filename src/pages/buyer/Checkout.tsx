@@ -76,6 +76,8 @@ export default function Checkout() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [quantity, setQuantity] = useState(() => {
+    const urlQty = parseInt(searchParams.get('qty') || '', 10);
+    if (urlQty > 0) return urlQty;
     const saved = getGuestContactFromSession();
     return saved?.quantity || 1;
   });
@@ -135,9 +137,10 @@ export default function Checkout() {
         return;
       }
       setProduct(data);
-      // Only set to MOQ if no saved quantity from Product Details page
+      // Only set to MOQ if no quantity was passed via URL or sessionStorage
+      const urlQty = parseInt(searchParams.get('qty') || '', 10);
       const savedData = getGuestContactFromSession();
-      if (!savedData?.quantity) {
+      if (!(urlQty > 0) && !savedData?.quantity) {
         setQuantity(data.moq || 1);
       }
       // Set default origin port from product
