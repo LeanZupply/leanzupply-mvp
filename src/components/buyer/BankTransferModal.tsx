@@ -16,6 +16,12 @@ import {
   Download,
   AlertTriangle,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { formatNumber } from "@/lib/formatters";
 
@@ -47,6 +53,7 @@ export function BankTransferModal({
   clientName = "",
 }: BankTransferModalProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [hasPdfDownloaded, setHasPdfDownloaded] = useState(false);
 
   const copyToClipboard = async (text: string, field: string) => {
     try {
@@ -80,6 +87,8 @@ export function BankTransferModal({
       toast.error("Por favor permite las ventanas emergentes para descargar el PDF");
       return;
     }
+
+    setHasPdfDownloaded(true);
 
     const formattedAmount = formatNumber(totalAmount);
 
@@ -585,10 +594,27 @@ export function BankTransferModal({
             <Download className="h-4 w-4 mr-2" />
             Descargar PDF
           </Button>
-          <Button className="flex-1" onClick={onConfirm}>
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Confirmar que realizare la transferencia
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex-1">
+                  <Button
+                    className="w-full"
+                    onClick={onConfirm}
+                    disabled={!hasPdfDownloaded}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Confirmar que realizare la transferencia
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {!hasPdfDownloaded && (
+                <TooltipContent>
+                  <p>Primero descargue el PDF</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </DialogContent>
     </Dialog>
