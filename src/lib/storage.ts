@@ -114,3 +114,73 @@ export async function downloadFile(path: string, filename?: string): Promise<boo
     return false;
   }
 }
+
+// ─── Order Documents (order-documents bucket) ───
+
+export async function uploadOrderDocument(
+  orderId: string,
+  file: File,
+  type: string
+): Promise<{ filePath: string; signedUrl: string | null }> {
+  const fileExt = file.name.split('.').pop();
+  const filePath = `${orderId}/${type}/${crypto.randomUUID()}.${fileExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('order-documents')
+    .upload(filePath, file, { upsert: false });
+
+  if (uploadError) throw uploadError;
+
+  const { data: signed } = await supabase.storage
+    .from('order-documents')
+    .createSignedUrl(filePath, 60 * 60);
+
+  return { filePath, signedUrl: signed?.signedUrl ?? null };
+}
+
+export async function getOrderDocSignedUrl(
+  path: string,
+  expiresInSeconds = 60 * 60
+): Promise<string | null> {
+  const { data, error } = await supabase.storage
+    .from('order-documents')
+    .createSignedUrl(path, expiresInSeconds);
+  if (error) {
+    console.error('[storage] Error creating order doc signed URL', error);
+    return null;
+  }
+  return data?.signedUrl ?? null;
+}
+
+export async function downloadOrderDocument(path: string, filename?: string): Promise<boolean> {
+  try {
+    const url = await getOrderDocSignedUrl(path);
+    if (!url) return false;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('Failed to fetch signed file');
+    const blob = await resp.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = filename || path.split('/').pop() || 'document';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 30000);
+    return true;
+  } catch (err) {
+    console.error('[storage] downloadOrderDocument error', err);
+    return false;
+  }
+}
+
+export async function deleteOrderDocument(path: string): Promise<boolean> {
+  const { error } = await supabase.storage
+    .from('order-documents')
+    .remove([path]);
+  if (error) {
+    console.error('[storage] deleteOrderDocument error', error);
+    return false;
+  }
+  return true;
+}

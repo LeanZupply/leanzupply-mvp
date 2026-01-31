@@ -61,7 +61,7 @@ const navigationMap = {
   manufacturer: [
     { title: "Dashboard", icon: BarChart3, url: "/manufacturer" },
     { title: "Productos", icon: Package, url: "/manufacturer/products" },
-    { title: "Pedidos", icon: ShoppingCart, url: "/manufacturer/orders" },
+    { title: "Mis Ventas", icon: ShoppingCart, url: "/manufacturer/orders" },
     { title: "Perfil", icon: UserCircle, url: "/manufacturer/profile" },
   ],
   buyer: [

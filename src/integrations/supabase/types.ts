@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -320,6 +320,156 @@ export type Database = {
           },
         ]
       }
+      order_activity_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          message: string | null
+          metadata: Json | null
+          new_state: string | null
+          old_state: string | null
+          order_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          new_state?: string | null
+          old_state?: string | null
+          order_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          new_state?: string | null
+          old_state?: string | null
+          order_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_activity_log_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_documents: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_url: string
+          id: string
+          order_id: string
+          type: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_url: string
+          id?: string
+          order_id: string
+          type: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          order_id?: string
+          type?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_documents_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          calculation_snapshot: Json | null
+          created_at: string | null
+          id: string
+          manufacturer_id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          total_price: number
+          unit_price: number
+          updated_at: string | null
+        }
+        Insert: {
+          calculation_snapshot?: Json | null
+          created_at?: string | null
+          id?: string
+          manufacturer_id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          total_price: number
+          unit_price: number
+          updated_at?: string | null
+        }
+        Update: {
+          calculation_snapshot?: Json | null
+          created_at?: string | null
+          id?: string
+          manufacturer_id?: string
+          order_id?: string
+          product_id?: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "public_manufacturer_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_tracking: {
         Row: {
           created_at: string
@@ -377,11 +527,13 @@ export type Database = {
           buyer_company: string | null
           buyer_email: string | null
           buyer_id: string
+          buyer_info_snapshot: Json | null
           buyer_notes: string | null
           calculation_snapshot: Json | null
           contract_url: string | null
           created_at: string | null
           customs_cost: number | null
+          delivery_confirmed_at: string | null
           delivery_estimate: string | null
           id: string
           incoterm: string | null
@@ -389,7 +541,11 @@ export type Database = {
           logistics_cost: number | null
           manufacturer_id: string
           manufacturer_notes: string | null
+          order_reference: string | null
+          payment_amount: number | null
+          payment_confirmed_at: string | null
           payment_method: string | null
+          payment_receipt_url: string | null
           payment_status: string
           product_id: string
           quantity: number
@@ -401,6 +557,7 @@ export type Database = {
           total_price: number
           tracking_info: Json | null
           tracking_stage: string | null
+          transport_message: string | null
           updated_at: string | null
         }
         Insert: {
@@ -408,11 +565,13 @@ export type Database = {
           buyer_company?: string | null
           buyer_email?: string | null
           buyer_id: string
+          buyer_info_snapshot?: Json | null
           buyer_notes?: string | null
           calculation_snapshot?: Json | null
           contract_url?: string | null
           created_at?: string | null
           customs_cost?: number | null
+          delivery_confirmed_at?: string | null
           delivery_estimate?: string | null
           id?: string
           incoterm?: string | null
@@ -420,7 +579,11 @@ export type Database = {
           logistics_cost?: number | null
           manufacturer_id: string
           manufacturer_notes?: string | null
+          order_reference?: string | null
+          payment_amount?: number | null
+          payment_confirmed_at?: string | null
           payment_method?: string | null
+          payment_receipt_url?: string | null
           payment_status?: string
           product_id: string
           quantity: number
@@ -432,6 +595,7 @@ export type Database = {
           total_price: number
           tracking_info?: Json | null
           tracking_stage?: string | null
+          transport_message?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -439,11 +603,13 @@ export type Database = {
           buyer_company?: string | null
           buyer_email?: string | null
           buyer_id?: string
+          buyer_info_snapshot?: Json | null
           buyer_notes?: string | null
           calculation_snapshot?: Json | null
           contract_url?: string | null
           created_at?: string | null
           customs_cost?: number | null
+          delivery_confirmed_at?: string | null
           delivery_estimate?: string | null
           id?: string
           incoterm?: string | null
@@ -451,7 +617,11 @@ export type Database = {
           logistics_cost?: number | null
           manufacturer_id?: string
           manufacturer_notes?: string | null
+          order_reference?: string | null
+          payment_amount?: number | null
+          payment_confirmed_at?: string | null
           payment_method?: string | null
+          payment_receipt_url?: string | null
           payment_status?: string
           product_id?: string
           quantity?: number
@@ -463,6 +633,7 @@ export type Database = {
           total_price?: number
           tracking_info?: Json | null
           tracking_stage?: string | null
+          transport_message?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -591,6 +762,7 @@ export type Database = {
           service_terms: string | null
           shipping_cost_total: number | null
           sku: string | null
+          slug: string | null
           specs: string | null
           status: string
           stock: number
@@ -661,6 +833,7 @@ export type Database = {
           service_terms?: string | null
           shipping_cost_total?: number | null
           sku?: string | null
+          slug?: string | null
           specs?: string | null
           status?: string
           stock?: number
@@ -731,6 +904,7 @@ export type Database = {
           service_terms?: string | null
           shipping_cost_total?: number | null
           sku?: string | null
+          slug?: string | null
           specs?: string | null
           status?: string
           stock?: number
@@ -926,6 +1100,41 @@ export type Database = {
           },
         ]
       }
+      review_reminders: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          id: string
+          order_id: string
+          scheduled_at: string
+          sent_at: string | null
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          id?: string
+          order_id: string
+          scheduled_at: string
+          sent_at?: string | null
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          scheduled_at?: string
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_reminders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           created_at: string | null
@@ -1098,6 +1307,11 @@ export type Database = {
       }
     }
     Functions: {
+      generate_product_slug: { Args: { product_name: string }; Returns: string }
+      generate_unique_product_slug: {
+        Args: { product_id: string; product_name: string }
+        Returns: string
+      }
       get_categories_stats: {
         Args: never
         Returns: {
@@ -1280,6 +1494,7 @@ export type Database = {
         Returns: undefined
       }
       track_product_view: { Args: { p_product_id: string }; Returns: undefined }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       app_role: "superadmin" | "manufacturer" | "buyer"

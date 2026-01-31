@@ -30,6 +30,7 @@ import {
   getGuestContactFromSession,
   clearGuestContactFromSession,
 } from "@/lib/guestContactValidation";
+import { logOrderActivity } from "@/lib/orderActivityLogger";
 interface Product {
   id: string;
   name: string;
@@ -353,7 +354,7 @@ export default function Checkout() {
           discount_10u: product.discount_10u
         }),
         order_reference: orderReference,
-        status: "pending",
+        status: "awaiting_payment",
         payment_status: "pending",
         tracking_stage: "created",
         buyer_notes: notes,
@@ -370,6 +371,14 @@ export default function Checkout() {
 
       // Track order submission
       await trackStep('confirmed');
+
+      // Log initial activity
+      await logOrderActivity({
+        orderId: orderData.id,
+        action: "order_created",
+        newState: "awaiting_payment",
+        message: "Orden creada - esperando pago",
+      });
 
       // Navigate to payment instructions page instead of order confirmation
       navigate(`/buyer/payment/${orderData.id}?showModal=true`);
