@@ -29,6 +29,8 @@ import {
   isGuestContactValid,
   getGuestContactFromSession,
   clearGuestContactFromSession,
+  getGuestQuoteRequestId,
+  clearGuestQuoteRequestId,
 } from "@/lib/guestContactValidation";
 interface Product {
   id: string;
@@ -217,44 +219,79 @@ export default function Checkout() {
 
       setSubmitting(true);
       try {
-        // Create quote request
-        const { data: quoteData, error: quoteError } = await supabase
-          .from("quote_requests")
-          .insert({
-            product_id: productId,
-            user_id: isGuest ? null : user!.id,
-            email: isGuest ? guestContactData.email.trim() : (profile?.email || user!.email),
-            mobile_phone: isGuest ? guestContactData.phone.trim() : profile?.mobile_phone,
-            tax_id: isGuest ? guestContactData.taxId.trim().toUpperCase() : profile?.tax_id,
-            postal_code: isGuest ? guestContactData.postalCode.trim() : profile?.postal_code,
-            is_authenticated: !isGuest,
-            status: "pending",
-            quantity: quantity,
-            notes: notes || null,
-            destination_port: selectedDestinationPort || null,
-            calculation_snapshot: calculationSnapshot,
-          })
-          .select()
-          .single();
+        // Check if there's an existing abandoned quote request to update
+        const existingQuoteId = isGuest ? getGuestQuoteRequestId() : null;
+        let quoteData: { id: string } | null = null;
 
-        if (quoteError) {
-          console.error("Quote request creation error:", quoteError);
-          throw new Error(quoteError.message || "No se pudo crear la solicitud");
+        if (existingQuoteId) {
+          // Update existing abandoned record to "pending"
+          const { data: updatedQuote, error: updateError } = await supabase
+            .from("quote_requests")
+            .update({
+              status: "pending",
+              quantity: quantity,
+              notes: notes || null,
+              destination_port: selectedDestinationPort || null,
+              calculation_snapshot: calculationSnapshot,
+              email: guestContactData.email.trim(),
+              mobile_phone: guestContactData.phone.trim(),
+              tax_id: guestContactData.taxId.trim().toUpperCase(),
+              postal_code: guestContactData.postalCode.trim(),
+            })
+            .eq("id", existingQuoteId)
+            .select("id")
+            .single();
+
+          if (updateError) {
+            console.error("Failed to update abandoned quote, falling back to insert:", updateError);
+            // Fall through to insert below
+          } else {
+            quoteData = updatedQuote;
+          }
+        }
+
+        // If no existing record was updated, create a new one
+        if (!quoteData) {
+          const { data: newQuote, error: quoteError } = await supabase
+            .from("quote_requests")
+            .insert({
+              product_id: productId,
+              user_id: isGuest ? null : user!.id,
+              email: isGuest ? guestContactData.email.trim() : (profile?.email || user!.email),
+              mobile_phone: isGuest ? guestContactData.phone.trim() : profile?.mobile_phone,
+              tax_id: isGuest ? guestContactData.taxId.trim().toUpperCase() : profile?.tax_id,
+              postal_code: isGuest ? guestContactData.postalCode.trim() : profile?.postal_code,
+              is_authenticated: !isGuest,
+              status: "pending",
+              quantity: quantity,
+              notes: notes || null,
+              destination_port: selectedDestinationPort || null,
+              calculation_snapshot: calculationSnapshot,
+            })
+            .select()
+            .single();
+
+          if (quoteError) {
+            console.error("Quote request creation error:", quoteError);
+            throw new Error(quoteError.message || "No se pudo crear la solicitud");
+          }
+          quoteData = newQuote;
         }
 
         // Track GTM events
         trackFormSubmission(FORM_NAMES.QUOTE_REQUEST);
         trackQuoteRequest(productId!, !isGuest);
 
-        // Clear guest contact data from sessionStorage after successful submission
+        // Clear guest contact data and quote request ID from sessionStorage
         if (isGuest) {
           clearGuestContactFromSession();
+          clearGuestQuoteRequestId();
         }
 
         toast.success("¡Solicitud enviada exitosamente!", {
           duration: 5000
         });
-        navigate(`/order-confirmation?quoteId=${quoteData.id}`);
+        navigate(`/order-confirmation?quoteId=${quoteData!.id}`);
       } catch (error: any) {
         console.error("Error creating quote request:", error);
         toast.error(error.message || "Error al enviar la solicitud. Por favor intenta de nuevo.");

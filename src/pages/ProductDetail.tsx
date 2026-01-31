@@ -56,6 +56,8 @@ import {
   getEmptyGuestContactData,
   isGuestContactValid,
   saveGuestContactToSession,
+  saveGuestQuoteRequestId,
+  getGuestQuoteRequestId,
 } from "@/lib/guestContactValidation";
 import {
   Carousel,
@@ -215,13 +217,56 @@ export default function ProductDetail() {
     }
   };
 
-  const handleQuoteRequest = () => {
+  const handleQuoteRequest = async () => {
     if (!user) {
       // Non-authenticated user: save contact data and quantity, then go to checkout (guest mode)
       saveGuestContactToSession({
         ...guestContactData,
         quantity: costQuantity,
       });
+
+      // Insert abandoned quote request to capture lead data
+      try {
+        const existingId = getGuestQuoteRequestId();
+        if (existingId) {
+          // Update existing abandoned record instead of creating a duplicate
+          await supabase
+            .from("quote_requests")
+            .update({
+              email: guestContactData.email.trim(),
+              mobile_phone: guestContactData.phone.trim(),
+              tax_id: guestContactData.taxId.trim().toUpperCase(),
+              postal_code: guestContactData.postalCode.trim(),
+              quantity: costQuantity,
+              product_id: product?.id,
+            })
+            .eq("id", existingId);
+        } else {
+          const { data: abandonedQuote } = await supabase
+            .from("quote_requests")
+            .insert({
+              product_id: product?.id,
+              user_id: null,
+              email: guestContactData.email.trim(),
+              mobile_phone: guestContactData.phone.trim(),
+              tax_id: guestContactData.taxId.trim().toUpperCase(),
+              postal_code: guestContactData.postalCode.trim(),
+              is_authenticated: false,
+              status: "abandoned",
+              quantity: costQuantity,
+            })
+            .select("id")
+            .single();
+
+          if (abandonedQuote?.id) {
+            saveGuestQuoteRequestId(abandonedQuote.id);
+          }
+        }
+      } catch (error) {
+        // Graceful fallback: if DB insert fails, still proceed to checkout
+        console.error("Error saving abandoned quote request:", error);
+      }
+
       // Use product.id UUID (not URL slug) and add ?quote=true for guest checkout
       navigate(`/checkout/${product?.id}?quote=true`);
     } else {

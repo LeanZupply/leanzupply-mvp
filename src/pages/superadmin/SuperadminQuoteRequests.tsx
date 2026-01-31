@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Eye, MessageSquare, Users, UserCheck, Clock } from "lucide-react";
+import { Eye, MessageSquare, Users, UserCheck, Clock, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -60,6 +60,7 @@ const SuperadminQuoteRequests = () => {
     pending: 0,
     contacted: 0,
     completed: 0,
+    abandoned: 0,
     authenticated: 0,
     anonymous: 0,
   });
@@ -116,6 +117,7 @@ const SuperadminQuoteRequests = () => {
       pending: requests.filter((r) => r.status === "pending").length,
       contacted: requests.filter((r) => r.status === "contacted").length,
       completed: requests.filter((r) => r.status === "completed").length,
+      abandoned: requests.filter((r) => r.status === "abandoned").length,
       authenticated: requests.filter((r) => r.is_authenticated).length,
       anonymous: requests.filter((r) => !r.is_authenticated).length,
     });
@@ -149,6 +151,8 @@ const SuperadminQuoteRequests = () => {
         return "secondary";
       case "pending":
         return "outline";
+      case "abandoned":
+        return "outline";
       case "cancelled":
         return "destructive";
       default:
@@ -164,6 +168,8 @@ const SuperadminQuoteRequests = () => {
         return "Contactado";
       case "completed":
         return "Completado";
+      case "abandoned":
+        return "Abandonó el proceso";
       case "cancelled":
         return "Cancelado";
       default:
@@ -193,7 +199,7 @@ const SuperadminQuoteRequests = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="border-border">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -216,6 +222,19 @@ const SuperadminQuoteRequests = () => {
               <div>
                 <p className="text-2xl font-bold">{stats.pending}</p>
                 <p className="text-sm text-muted-foreground">Pendientes</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats.abandoned}</p>
+                <p className="text-sm text-muted-foreground">Abandonados</p>
               </div>
             </div>
           </CardContent>
@@ -262,6 +281,7 @@ const SuperadminQuoteRequests = () => {
                   <SelectItem value="pending">Pendiente</SelectItem>
                   <SelectItem value="contacted">Contactado</SelectItem>
                   <SelectItem value="completed">Completado</SelectItem>
+                  <SelectItem value="abandoned">Abandonó el proceso</SelectItem>
                   <SelectItem value="cancelled">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
@@ -326,8 +346,11 @@ const SuperadminQuoteRequests = () => {
                       value={request.status}
                       onValueChange={(value) => updateRequestStatus(request.id, value)}
                     >
-                      <SelectTrigger className="w-32">
-                        <Badge variant={getStatusBadgeVariant(request.status)}>
+                      <SelectTrigger className="w-36">
+                        <Badge
+                          variant={getStatusBadgeVariant(request.status)}
+                          className={request.status === "abandoned" ? "border-amber-500 text-amber-700 bg-amber-50" : ""}
+                        >
                           {getStatusLabel(request.status)}
                         </Badge>
                       </SelectTrigger>
@@ -335,6 +358,7 @@ const SuperadminQuoteRequests = () => {
                         <SelectItem value="pending">Pendiente</SelectItem>
                         <SelectItem value="contacted">Contactado</SelectItem>
                         <SelectItem value="completed">Completado</SelectItem>
+                        <SelectItem value="abandoned">Abandonó el proceso</SelectItem>
                         <SelectItem value="cancelled">Cancelado</SelectItem>
                       </SelectContent>
                     </Select>
@@ -453,7 +477,10 @@ const SuperadminQuoteRequests = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-foreground/70 mb-1">Estado</p>
-                  <Badge variant={getStatusBadgeVariant(selectedRequest.status)}>
+                  <Badge
+                    variant={getStatusBadgeVariant(selectedRequest.status)}
+                    className={selectedRequest.status === "abandoned" ? "border-amber-500 text-amber-700 bg-amber-50" : ""}
+                  >
                     {getStatusLabel(selectedRequest.status)}
                   </Badge>
                 </div>
