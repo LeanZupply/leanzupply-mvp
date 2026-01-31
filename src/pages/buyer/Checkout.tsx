@@ -147,6 +147,8 @@ export default function Checkout() {
       // Set default origin port from product
       if (data.delivery_port) {
         setOriginPort(data.delivery_port);
+      } else if (!user && isQuoteMode) {
+        setOriginPort("Shanghai");
       }
     } catch (error) {
       console.error("Error fetching product:", error);
@@ -460,7 +462,7 @@ export default function Checkout() {
                     <Label htmlFor="origin-port" className="text-sm">
                       Puerto de origen
                     </Label>
-                    <Select value={originPort} onValueChange={setOriginPort} disabled={!!product.delivery_port}>
+                    <Select value={originPort} onValueChange={setOriginPort} disabled={!!product.delivery_port || (isQuoteMode && !user)}>
                       <SelectTrigger id="origin-port" className="mt-2">
                         <SelectValue placeholder="Selecciona puerto origen" />
                       </SelectTrigger>
@@ -482,6 +484,16 @@ export default function Checkout() {
                           Este producto solo se despacha desde {product.delivery_port}
                         </p>
                       </div>}
+                    {!product.delivery_port && isQuoteMode && !user && (
+                      <div className="mt-2 text-xs bg-muted/50 border border-border rounded-md p-2">
+                        <p className="font-medium text-foreground">
+                          🔒 Puerto de origen asignado automáticamente
+                        </p>
+                        <p className="text-muted-foreground mt-1">
+                          Ruta optimizada desde {originPort}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Puerto Destino - Seleccionado automáticamente */}
