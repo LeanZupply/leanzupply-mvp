@@ -20,6 +20,7 @@ import { GuestContactForm } from "@/components/buyer/GuestContactForm";
 import { BuyerInfoForm } from "@/components/buyer/BuyerInfoForm";
 import { LocalShippingCalculation } from "@/lib/localShippingCalculator";
 import { calculateOrderTotal } from "@/lib/priceCalculations";
+import { formatNumber } from "@/lib/formatters";
 import { generateOrderReference } from "@/lib/orderReferenceGenerator";
 import { BuyerInfoFormData } from "@/lib/validationSchemas";
 import {
@@ -28,6 +29,8 @@ import {
   isGuestContactValid,
   getGuestContactFromSession,
   clearGuestContactFromSession,
+  getGuestQuoteRequestId,
+  clearGuestQuoteRequestId,
 } from "@/lib/guestContactValidation";
 interface Product {
   id: string;
@@ -76,16 +79,18 @@ export default function Checkout() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [quantity, setQuantity] = useState(() => {
+    const urlQty = parseInt(searchParams.get('qty') || '', 10);
+    if (urlQty > 0) return urlQty;
     const saved = getGuestContactFromSession();
     return saved?.quantity || 1;
   });
   const [notes, setNotes] = useState("");
   const [originPort, setOriginPort] = useState<string>("");
   const [selectedDestinationPort, setSelectedDestinationPort] = useState<string>("");
-  const [totalCost, setTotalCost] = useState(0);
   const [calculationSnapshot, setCalculationSnapshot] = useState<any>(null);
   const [localShippingCalc, setLocalShippingCalc] = useState<LocalShippingCalculation | null>(null);
   const [internationalCost, setInternationalCost] = useState(0);
+  const totalCost = internationalCost + (localShippingCalc?.total_local_shipping || 0);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Guest form state (for non-authenticated users in quote mode)
@@ -135,14 +140,17 @@ export default function Checkout() {
         return;
       }
       setProduct(data);
-      // Only set to MOQ if no saved quantity from Product Details page
+      // Only set to MOQ if no quantity was passed via URL or sessionStorage
+      const urlQty = parseInt(searchParams.get('qty') || '', 10);
       const savedData = getGuestContactFromSession();
-      if (!savedData?.quantity) {
+      if (!(urlQty > 0) && !savedData?.quantity) {
         setQuantity(data.moq || 1);
       }
       // Set default origin port from product
       if (data.delivery_port) {
         setOriginPort(data.delivery_port);
+      } else if (!user && isQuoteMode) {
+        setOriginPort("Shanghai");
       }
     } catch (error) {
       console.error("Error fetching product:", error);
@@ -211,44 +219,79 @@ export default function Checkout() {
 
       setSubmitting(true);
       try {
-        // Create quote request
-        const { data: quoteData, error: quoteError } = await supabase
-          .from("quote_requests")
-          .insert({
-            product_id: productId,
-            user_id: isGuest ? null : user!.id,
-            email: isGuest ? guestContactData.email.trim() : (profile?.email || user!.email),
-            mobile_phone: isGuest ? guestContactData.phone.trim() : profile?.mobile_phone,
-            tax_id: isGuest ? guestContactData.taxId.trim().toUpperCase() : profile?.tax_id,
-            postal_code: isGuest ? guestContactData.postalCode.trim() : profile?.postal_code,
-            is_authenticated: !isGuest,
-            status: "pending",
-            quantity: quantity,
-            notes: notes || null,
-            destination_port: selectedDestinationPort || null,
-            calculation_snapshot: calculationSnapshot,
-          })
-          .select()
-          .single();
+        // Check if there's an existing abandoned quote request to update
+        const existingQuoteId = isGuest ? getGuestQuoteRequestId() : null;
+        let quoteData: { id: string } | null = null;
 
-        if (quoteError) {
-          console.error("Quote request creation error:", quoteError);
-          throw new Error(quoteError.message || "No se pudo crear la solicitud");
+        if (existingQuoteId) {
+          // Update existing abandoned record to "pending"
+          const { data: updatedQuote, error: updateError } = await supabase
+            .from("quote_requests")
+            .update({
+              status: "pending",
+              quantity: quantity,
+              notes: notes || null,
+              destination_port: selectedDestinationPort || null,
+              calculation_snapshot: calculationSnapshot,
+              email: guestContactData.email.trim(),
+              mobile_phone: guestContactData.phone.trim(),
+              tax_id: guestContactData.taxId.trim().toUpperCase(),
+              postal_code: guestContactData.postalCode.trim(),
+            })
+            .eq("id", existingQuoteId)
+            .select("id")
+            .single();
+
+          if (updateError) {
+            console.error("Failed to update abandoned quote, falling back to insert:", updateError);
+            // Fall through to insert below
+          } else {
+            quoteData = updatedQuote;
+          }
+        }
+
+        // If no existing record was updated, create a new one
+        if (!quoteData) {
+          const { data: newQuote, error: quoteError } = await supabase
+            .from("quote_requests")
+            .insert({
+              product_id: productId,
+              user_id: isGuest ? null : user!.id,
+              email: isGuest ? guestContactData.email.trim() : (profile?.email || user!.email),
+              mobile_phone: isGuest ? guestContactData.phone.trim() : profile?.mobile_phone,
+              tax_id: isGuest ? guestContactData.taxId.trim().toUpperCase() : profile?.tax_id,
+              postal_code: isGuest ? guestContactData.postalCode.trim() : profile?.postal_code,
+              is_authenticated: !isGuest,
+              status: "pending",
+              quantity: quantity,
+              notes: notes || null,
+              destination_port: selectedDestinationPort || null,
+              calculation_snapshot: calculationSnapshot,
+            })
+            .select()
+            .single();
+
+          if (quoteError) {
+            console.error("Quote request creation error:", quoteError);
+            throw new Error(quoteError.message || "No se pudo crear la solicitud");
+          }
+          quoteData = newQuote;
         }
 
         // Track GTM events
         trackFormSubmission(FORM_NAMES.QUOTE_REQUEST);
         trackQuoteRequest(productId!, !isGuest);
 
-        // Clear guest contact data from sessionStorage after successful submission
+        // Clear guest contact data and quote request ID from sessionStorage
         if (isGuest) {
           clearGuestContactFromSession();
+          clearGuestQuoteRequestId();
         }
 
         toast.success("¡Solicitud enviada exitosamente!", {
           duration: 5000
         });
-        navigate(`/order-confirmation?quoteId=${quoteData.id}`);
+        navigate(`/order-confirmation?quoteId=${quoteData!.id}`);
       } catch (error: any) {
         console.error("Error creating quote request:", error);
         toast.error(error.message || "Error al enviar la solicitud. Por favor intenta de nuevo.");
@@ -401,7 +444,9 @@ export default function Checkout() {
         </Button>
 
         <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">
-          {isQuoteMode ? "Solicitud de Propuesta Final" : "Confirmar Pedido"}
+          {isQuoteMode
+            ? (user ? "Solicitud de Propuesta Final" : "Vista Detalle Pedido")
+            : "Confirmar Pedido"}
         </h1>
 
         <div className="space-y-6 sm:space-y-8">
@@ -422,7 +467,7 @@ export default function Checkout() {
                     {product.description}
                   </p>
                   <p className="text-base sm:text-lg font-bold text-primary mt-2">
-                    €{product.price_unit.toLocaleString("es-ES")} <span className="text-xs sm:text-sm font-normal">EUR/unidad</span>
+                    €{formatNumber(product.price_unit)} <span className="text-xs sm:text-sm font-normal">EUR/unidad</span>
                   </p>
                 </div>
               </div>
@@ -454,7 +499,7 @@ export default function Checkout() {
                     <Label htmlFor="origin-port" className="text-sm">
                       Puerto de origen
                     </Label>
-                    <Select value={originPort} onValueChange={setOriginPort} disabled={!!product.delivery_port}>
+                    <Select value={originPort} onValueChange={setOriginPort} disabled={!!product.delivery_port || (isQuoteMode && !user)}>
                       <SelectTrigger id="origin-port" className="mt-2">
                         <SelectValue placeholder="Selecciona puerto origen" />
                       </SelectTrigger>
@@ -476,6 +521,16 @@ export default function Checkout() {
                           Este producto solo se despacha desde {product.delivery_port}
                         </p>
                       </div>}
+                    {!product.delivery_port && isQuoteMode && !user && (
+                      <div className="mt-2 text-xs bg-muted/50 border border-border rounded-md p-2">
+                        <p className="font-medium text-foreground">
+                          🔒 Puerto de origen asignado automáticamente
+                        </p>
+                        <p className="text-muted-foreground mt-1">
+                          Ruta optimizada desde {originPort}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Puerto Destino - Seleccionado automáticamente */}
@@ -540,13 +595,9 @@ export default function Checkout() {
           <CostBreakdown productId={product.id} quantity={quantity} destinationCountry="spain" originPort={originPort || undefined} realTime={true} onCalculationComplete={calc => {
           setInternationalCost(calc.breakdown.total);
           setCalculationSnapshot(calc);
-          // Guardar el puerto destino seleccionado automáticamente
           if (calc.transit_info?.destination_port) {
             setSelectedDestinationPort(calc.transit_info.destination_port);
           }
-          // Sumar internacional + local
-          const localCost = localShippingCalc?.total_local_shipping || 0;
-          setTotalCost(calc.breakdown.total + localCost);
         }} />
 
           {/* Envio Local (Espana) - Siempre incluido */}
@@ -558,14 +609,7 @@ export default function Checkout() {
                 : (deliveryPostalCode || profile?.postal_code || "")
             }
             onCalculationComplete={calc => {
-          if (calc) {
-            setLocalShippingCalc(calc);
-            // Sumar internacional + local
-            setTotalCost(internationalCost + calc.total_local_shipping);
-          } else {
-            setLocalShippingCalc(null);
-            setTotalCost(internationalCost);
-          }
+          setLocalShippingCalc(calc || null);
         }} />
 
           {/* Payment Summary - DESPUÉS del desglose */}
@@ -582,10 +626,7 @@ export default function Checkout() {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Envío internacional + impuestos</span>
                       <span className="font-medium">
-                        €{internationalCost.toLocaleString("es-ES", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}
+                        €{formatNumber(internationalCost)}
                       </span>
                     </div>
                     {localShippingCalc && <div className="flex justify-between text-sm">
@@ -593,20 +634,14 @@ export default function Checkout() {
                           Envío local ({localShippingCalc.zone?.name || 'Pendiente CP'})
                         </span>
                         <span className="font-medium">
-                          €{localShippingCalc.total_local_shipping.toLocaleString("es-ES", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}
+                          €{formatNumber(localShippingCalc.total_local_shipping)}
                         </span>
                       </div>}
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total a Pagar</span>
                       <span className="text-primary">
-                        €{totalCost.toLocaleString("es-ES", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}
+                        €{formatNumber(totalCost)}
                       </span>
                     </div>
                   </>}

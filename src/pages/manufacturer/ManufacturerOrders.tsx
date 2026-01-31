@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { handleError } from "@/lib/errorHandler";
 import { CostBreakdown } from "@/components/CostBreakdown";
 import { Separator } from "@/components/ui/separator";
+import { formatNumber } from "@/lib/formatters";
 
 interface Order {
   id: string;
@@ -339,7 +340,7 @@ const ManufacturerOrders = () => {
                       </div>
                       <div>
                         <p className="text-muted-foreground text-xs">Total</p>
-                        <p className="font-semibold text-primary">€{order.total_price.toLocaleString()}</p>
+                        <p className="font-semibold text-primary">€{formatNumber(order.total_price)}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground text-xs">Incoterm</p>
@@ -510,22 +511,22 @@ const ManufacturerOrders = () => {
                     <div>
                       <Label className="text-muted-foreground text-xs">Total Pedido</Label>
                       <p className="font-semibold text-xl text-primary">
-                        €{selectedOrder.total_price.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                        €{formatNumber(selectedOrder.total_price)}
                       </p>
                     </div>
                     <div>
                       <Label className="text-muted-foreground text-xs">Volumen Total</Label>
                       <p className="font-semibold text-foreground">
-                        {selectedOrder.product?.volume_m3 
-                          ? `${(selectedOrder.product.volume_m3 * selectedOrder.quantity).toFixed(2)} m³`
+                        {selectedOrder.product?.volume_m3
+                          ? `${formatNumber(selectedOrder.product.volume_m3 * selectedOrder.quantity)} m³`
                           : "—"}
                       </p>
                     </div>
                     <div>
                       <Label className="text-muted-foreground text-xs">Peso Total</Label>
                       <p className="font-semibold text-foreground">
-                        {selectedOrder.product?.weight_gross_kg 
-                          ? `${(selectedOrder.product.weight_gross_kg * selectedOrder.quantity).toFixed(0)} kg`
+                        {selectedOrder.product?.weight_gross_kg
+                          ? `${formatNumber(selectedOrder.product.weight_gross_kg * selectedOrder.quantity, 0, 0)} kg`
                           : "—"}
                       </p>
                     </div>
@@ -796,7 +797,7 @@ const ManufacturerOrders = () => {
                         <p className="text-xs text-muted-foreground mb-1">Total EUR</p>
                         <p className="text-xl font-bold text-primary">
                           {selectedQuoteRequest.calculation_snapshot?.breakdown?.total
-                            ? `€${selectedQuoteRequest.calculation_snapshot.breakdown.total.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            ? `€${formatNumber(selectedQuoteRequest.calculation_snapshot.breakdown.total)}`
                             : "—"}
                         </p>
                       </div>
@@ -804,7 +805,7 @@ const ManufacturerOrders = () => {
                         <p className="text-xs text-muted-foreground mb-1">Volumen</p>
                         <p className="text-xl font-bold text-foreground">
                           {selectedQuoteRequest.calculation_snapshot?.breakdown?.total_volume_m3
-                            ? `${selectedQuoteRequest.calculation_snapshot.breakdown.total_volume_m3.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            ? `${formatNumber(selectedQuoteRequest.calculation_snapshot.breakdown.total_volume_m3)}`
                             : "—"}
                         </p>
                         <p className="text-xs text-muted-foreground">m³</p>

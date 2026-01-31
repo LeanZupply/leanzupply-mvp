@@ -6,6 +6,7 @@ import { Users, Package, ShoppingCart, CheckCircle, MapPin, Eye } from "lucide-r
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { handleError } from "@/lib/errorHandler";
+import { formatNumber } from "@/lib/formatters";
 
 interface Stats {
   totalUsers: number;
@@ -254,7 +255,7 @@ const SuperadminOverview = () => {
                         <Eye className="h-4 w-4" />
                         {product.views_count} vistas
                       </p>
-                      <p className="text-sm text-muted-foreground">€{product.price_unit.toLocaleString("es-ES")}</p>
+                      <p className="text-sm text-muted-foreground">€{formatNumber(product.price_unit)}</p>
                     </div>
                   </div>
                 </div>

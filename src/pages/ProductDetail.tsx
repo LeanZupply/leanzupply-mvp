@@ -20,6 +20,7 @@ import { SEO } from "@/components/SEO";
 import { BreadcrumbNav } from "@/components/BreadcrumbNav";
 import { isUUID } from "@/lib/slugify";
 import { getCategorySlug } from "@/lib/categories";
+import { buildProductSeoTitle, buildProductSeoDescription, buildProductJsonLd } from "@/lib/seoHelpers";
 import {
   ArrowLeft,
   Building2,
@@ -47,6 +48,7 @@ import { handleError } from "@/lib/errorHandler";
 import { ProductCard } from "@/components/ProductCard";
 import { CostBreakdown } from "@/components/CostBreakdown";
 import { calculateOrderTotal } from "@/lib/priceCalculations";
+import { formatNumber } from "@/lib/formatters";
 import { ProfileCompletionModal } from "@/components/buyer/ProfileCompletionModal";
 import { GuestContactForm } from "@/components/buyer/GuestContactForm";
 import {
@@ -54,6 +56,8 @@ import {
   getEmptyGuestContactData,
   isGuestContactValid,
   saveGuestContactToSession,
+  saveGuestQuoteRequestId,
+  getGuestQuoteRequestId,
 } from "@/lib/guestContactValidation";
 import {
   Carousel,
@@ -205,22 +209,66 @@ export default function ProductDetail() {
     trackOrderClick();
 
     if (!user) {
-      // Redirect to signup with return path
-      navigate(`/auth/signup?redirect_to=/checkout/${id}`);
+      // Redirect to signup with return path (use product.id UUID, not URL slug)
+      navigate(`/auth/signup?redirect_to=/checkout/${product?.id}`);
     } else {
-      // Go directly to checkout
-      navigate(`/checkout/${id}`);
+      // Go directly to checkout (use product.id UUID, not URL slug)
+      navigate(`/checkout/${product?.id}`);
     }
   };
 
-  const handleQuoteRequest = () => {
+  const handleQuoteRequest = async () => {
     if (!user) {
       // Non-authenticated user: save contact data and quantity, then go to checkout (guest mode)
       saveGuestContactToSession({
         ...guestContactData,
         quantity: costQuantity,
       });
-      navigate(`/checkout/${id}`);
+
+      // Insert abandoned quote request to capture lead data
+      try {
+        const existingId = getGuestQuoteRequestId();
+        if (existingId) {
+          // Update existing abandoned record instead of creating a duplicate
+          await supabase
+            .from("quote_requests")
+            .update({
+              email: guestContactData.email.trim(),
+              mobile_phone: guestContactData.phone.trim(),
+              tax_id: guestContactData.taxId.trim().toUpperCase(),
+              postal_code: guestContactData.postalCode.trim(),
+              quantity: costQuantity,
+              product_id: product?.id,
+            })
+            .eq("id", existingId);
+        } else {
+          const { data: abandonedQuote } = await supabase
+            .from("quote_requests")
+            .insert({
+              product_id: product?.id,
+              user_id: null,
+              email: guestContactData.email.trim(),
+              mobile_phone: guestContactData.phone.trim(),
+              tax_id: guestContactData.taxId.trim().toUpperCase(),
+              postal_code: guestContactData.postalCode.trim(),
+              is_authenticated: false,
+              status: "abandoned",
+              quantity: costQuantity,
+            })
+            .select("id")
+            .single();
+
+          if (abandonedQuote?.id) {
+            saveGuestQuoteRequestId(abandonedQuote.id);
+          }
+        }
+      } catch (error) {
+        // Graceful fallback: if DB insert fails, still proceed to checkout
+        console.error("Error saving abandoned quote request:", error);
+      }
+
+      // Use product.id UUID (not URL slug) and add ?quote=true for guest checkout
+      navigate(`/checkout/${product?.id}?quote=true`);
     } else {
       // Authenticated user: check if profile is complete
       const isComplete = profile?.mobile_phone &&
@@ -229,8 +277,8 @@ export default function ProductDetail() {
                          profile?.is_professional_business === true;
 
       if (isComplete) {
-        // Profile complete: go directly to checkout
-        navigate(`/checkout/${id}`);
+        // Profile complete: go directly to checkout (use product.id UUID, not URL slug)
+        navigate(`/checkout/${product?.id}?qty=${costQuantity}`);
       } else {
         // Profile incomplete: show ProfileCompletionModal first
         setProfileModalOpen(true);
@@ -240,8 +288,8 @@ export default function ProductDetail() {
 
   const handleProfileComplete = () => {
     setProfileModalOpen(false);
-    // After profile is complete, navigate to checkout
-    navigate(`/checkout/${id}`);
+    // After profile is complete, navigate to checkout (use product.id UUID, not URL slug)
+    navigate(`/checkout/${product?.id}?qty=${costQuantity}`);
   };
 
   const fetchProduct = async () => {
@@ -427,44 +475,38 @@ export default function ProductDetail() {
   const categorySlug = getCategorySlug(product.category);
   const productImages = parseImages(product.images);
   const productImage = productImages[0]?.url;
-  const truncatedDescription = product.description
-    ? product.description.substring(0, 160)
-    : `Compra ${product.name} de fabricantes certificados en LeanZupply. Precio FOB directo de fábrica.`;
+  const productUrl = `https://leanzupply.com/producto/${productSlug}`;
 
-  // JSON-LD structured data for product
-  const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": product.name,
-    "description": product.description || truncatedDescription,
-    "image": productImages.map(img => img.url),
-    "sku": product.sku || product.id,
-    "brand": manufacturer ? {
-      "@type": "Organization",
-      "name": manufacturer.registered_brand
-    } : undefined,
-    "category": product.category,
-    "offers": {
-      "@type": "Offer",
-      "priceCurrency": "EUR",
-      "price": product.price_unit,
-      "availability": product.stock > 0
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-      "seller": manufacturer ? {
-        "@type": "Organization",
-        "name": manufacturer.registered_brand
-      } : undefined
-    }
-  };
+  // Build SEO-optimized title and description using helpers
+  const seoTitle = buildProductSeoTitle({
+    name: product.name,
+    brand: product.brand,
+    model: product.model,
+    category: product.category,
+  });
+
+  const seoDescription = buildProductSeoDescription({
+    description: product.description,
+    name: product.name,
+    brand: product.brand,
+    model: product.model,
+    category: product.category,
+  });
+
+  // JSON-LD structured data for product (with mpn and manufacturer)
+  const productJsonLd = buildProductJsonLd({
+    product: { ...product, images: productImages },
+    manufacturer,
+    productUrl,
+  });
 
   return (
     <div className="min-h-screen bg-background">
       {/* SEO Meta Tags */}
       <SEO
-        title={`${product.name} - ${product.category}`}
-        description={truncatedDescription}
-        canonical={`https://leanzupply.com/producto/${productSlug}`}
+        title={seoTitle}
+        description={seoDescription}
+        canonical={productUrl}
         ogImage={productImage}
         type="product"
       />
@@ -738,9 +780,9 @@ export default function ProductDetail() {
                 <div className="flex items-baseline justify-between">
                   <div>
                     <span className="text-4xl font-bold text-primary">
-                      €{product.price_unit.toLocaleString("es-ES")}
+                      €{formatNumber(product.price_unit)}
                     </span>
-                    <span className="text-muted-foreground ml-2">EUR/unidad</span>
+                    <span className="text-muted-foreground ml-2">EUR/unidad FOB</span>
                   </div>
                   {product.stock > 0 && (
                     <Badge variant="default" className="bg-green-500/10 text-green-600 border-green-500/20">
@@ -1077,7 +1119,7 @@ export default function ProductDetail() {
             <div className="bg-muted p-4 rounded-lg space-y-2">
               <div className="flex justify-between">
                 <span>Precio unitario:</span>
-                <span className="font-medium">€{product.price_unit}</span>
+                <span className="font-medium">€{formatNumber(product.price_unit)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Cantidad:</span>
@@ -1085,12 +1127,12 @@ export default function ProductDetail() {
               </div>
               <div className="flex justify-between text-lg font-bold border-t border-border pt-2">
                 <span>Total:</span>
-                <span className="text-primary">€{calculateOrderTotal(product.price_unit, orderQuantity, {
+                <span className="text-primary">€{formatNumber(calculateOrderTotal(product.price_unit, orderQuantity, {
                   discount_3u: product.discount_3u,
                   discount_5u: product.discount_5u,
                   discount_8u: product.discount_8u,
                   discount_10u: product.discount_10u,
-                }).toLocaleString()}</span>
+                }))}</span>
               </div>
             </div>
             <Button onClick={handleOrder} className="w-full">Confirmar Solicitud</Button>

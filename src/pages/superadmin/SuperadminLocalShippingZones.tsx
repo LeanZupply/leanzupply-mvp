@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "sonner";
 import { Plus, Edit, Trash2, MapPin, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { formatNumber } from "@/lib/formatters";
 
 interface PostalCodeRange {
   start: string;
@@ -322,7 +323,7 @@ export default function SuperadminLocalShippingZones() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="font-semibold">€{zone.base_price.toFixed(2)}</TableCell>
+                  <TableCell className="font-semibold">€{formatNumber(zone.base_price)}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {(zone.postal_code_ranges as unknown as PostalCodeRange[]).map((range, idx) => (

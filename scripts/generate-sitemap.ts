@@ -21,8 +21,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Domain configuration
-const DOMAIN = 'https://leanzupply.com';
+// Domain configuration (override with SITE_URL or VITE_SITE_URL for dev/prod)
+const DOMAIN = process.env.SITE_URL || process.env.VITE_SITE_URL || 'https://leanzupply.com';
 
 // Category slugs (must match src/lib/categories.ts)
 const CATEGORY_SLUGS = [
@@ -43,6 +43,7 @@ const CATEGORY_SLUGS = [
 // Static pages
 const STATIC_PAGES = [
   { loc: '/', priority: '1.0', changefreq: 'daily' },
+  { loc: '/catalogo', priority: '0.9', changefreq: 'daily' },
   { loc: '/auth/login', priority: '0.3', changefreq: 'monthly' },
   { loc: '/auth/signup', priority: '0.5', changefreq: 'monthly' },
   { loc: '/legal/privacidad', priority: '0.2', changefreq: 'yearly' },
@@ -63,29 +64,31 @@ async function generateSitemap() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  let products: { slug: string | null; updated_at?: string | null }[] = [];
+
   if (!supabaseUrl || !supabaseKey) {
-    console.error('❌ Missing Supabase credentials. Required:');
-    console.error('   - VITE_SUPABASE_URL or SUPABASE_URL');
-    console.error('   - SUPABASE_SERVICE_ROLE_KEY');
-    process.exit(1);
+    console.warn('⚠️  Missing Supabase credentials, generating sitemap without product URLs.');
+    console.warn('   - VITE_SUPABASE_URL or SUPABASE_URL');
+    console.warn('   - SUPABASE_SERVICE_ROLE_KEY');
+  } else {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch all active products with slugs
+    console.log('📦 Fetching products from Supabase...');
+    const { data, error } = await supabase
+      .from('products')
+      .select('slug, updated_at')
+      .eq('status', 'active')
+      .not('slug', 'is', null);
+
+    if (error) {
+      console.error('❌ Error fetching products:', error.message);
+      process.exit(1);
+    }
+
+    products = data || [];
+    console.log(`   Found ${products?.length || 0} active products with slugs`);
   }
-
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
-  // Fetch all active products with slugs
-  console.log('📦 Fetching products from Supabase...');
-  const { data: products, error } = await supabase
-    .from('products')
-    .select('slug, updated_at')
-    .eq('status', 'active')
-    .not('slug', 'is', null);
-
-  if (error) {
-    console.error('❌ Error fetching products:', error.message);
-    process.exit(1);
-  }
-
-  console.log(`   Found ${products?.length || 0} active products with slugs`);
 
   // Build URL list
   const urls: SitemapUrl[] = [];

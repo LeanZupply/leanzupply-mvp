@@ -13,6 +13,7 @@ export interface GuestContactData {
 }
 
 const SESSION_STORAGE_KEY = 'guest_contact_data';
+const QUOTE_REQUEST_ID_KEY = 'guest_quote_request_id';
 
 // Validation regex patterns (same as Checkout.tsx)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -92,13 +93,48 @@ export function getGuestContactFromSession(): GuestContactData | null {
 }
 
 /**
- * Clears guest contact data from sessionStorage
+ * Clears guest contact data and quote request ID from sessionStorage
  */
 export function clearGuestContactFromSession(): void {
   try {
     sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    sessionStorage.removeItem(QUOTE_REQUEST_ID_KEY);
   } catch (error) {
     console.error('Failed to clear guest contact data from session:', error);
+  }
+}
+
+/**
+ * Saves the abandoned quote request ID to sessionStorage
+ */
+export function saveGuestQuoteRequestId(id: string): void {
+  try {
+    sessionStorage.setItem(QUOTE_REQUEST_ID_KEY, id);
+  } catch (error) {
+    console.error('Failed to save guest quote request ID to session:', error);
+  }
+}
+
+/**
+ * Retrieves the abandoned quote request ID from sessionStorage
+ */
+export function getGuestQuoteRequestId(): string | null {
+  try {
+    return sessionStorage.getItem(QUOTE_REQUEST_ID_KEY);
+  } catch (error) {
+    console.error('Failed to retrieve guest quote request ID from session:', error);
+  }
+  return null;
+}
+
+/**
+ * Clears the abandoned quote request ID from sessionStorage
+ */
+export function clearGuestQuoteRequestId(): void {
+  try {
+    sessionStorage.removeItem(QUOTE_REQUEST_ID_KEY);
+  } catch (error) {
+    console.error('Failed to clear guest quote request ID from session:', error);
   }
 }
 

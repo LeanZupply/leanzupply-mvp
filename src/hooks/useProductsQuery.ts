@@ -17,6 +17,7 @@ export const useProductsQuery = (options: ProductsQueryOptions = {}) => {
         .from("products")
         .select(`
           id,
+          slug,
           name,
           category,
           subcategory,
@@ -26,6 +27,8 @@ export const useProductsQuery = (options: ProductsQueryOptions = {}) => {
           stock,
           status,
           images,
+          model,
+          brand,
           lead_time_production_days,
           views_count,
           material,
@@ -77,7 +80,7 @@ export const useProductsQuery = (options: ProductsQueryOptions = {}) => {
       const manufacturerIds = Array.from(
         new Set(products.map((p: any) => p.manufacturer_id).filter(Boolean))
       );
-      
+
       let profilesMap: Record<string, { company_name: string; country: string }> = {};
       if (manufacturerIds.length > 0) {
         const { data: profilesData } = await supabase
@@ -88,11 +91,31 @@ export const useProductsQuery = (options: ProductsQueryOptions = {}) => {
           (profilesData || []).map((pr: any) => [pr.id, { company_name: pr.company_name, country: pr.country }])
         );
       }
-      
-      // Adjuntar manufacturer básico (opcional)
+
+      // Cargar info adicional del fabricante desde manufacturers (registered_brand, brand_logo_url)
+      let manufacturersMap: Record<string, { registered_brand: string; brand_logo_url: string | null }> = {};
+      if (manufacturerIds.length > 0) {
+        const { data: manufacturersData } = await supabase
+          .from("manufacturers")
+          .select("user_id, registered_brand, brand_logo_url")
+          .in("user_id", manufacturerIds as string[]);
+        manufacturersMap = Object.fromEntries(
+          (manufacturersData || []).map((m: any) => [m.user_id, {
+            registered_brand: m.registered_brand,
+            brand_logo_url: m.brand_logo_url
+          }])
+        );
+      }
+
+      // Adjuntar manufacturer básico (prioriza registered_brand sobre company_name)
       const normalized = products.map((p: any) => ({
         ...p,
-        manufacturer: p.manufacturer_id ? profilesMap[p.manufacturer_id] || null : null,
+        manufacturer: p.manufacturer_id ? {
+          registered_brand: manufacturersMap[p.manufacturer_id]?.registered_brand || profilesMap[p.manufacturer_id]?.company_name,
+          company_name: profilesMap[p.manufacturer_id]?.company_name,
+          country: profilesMap[p.manufacturer_id]?.country,
+          brand_logo_url: manufacturersMap[p.manufacturer_id]?.brand_logo_url
+        } : null,
       }));
       
       // Debug

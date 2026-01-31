@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { trackFormSubmission, FORM_NAMES } from "@/lib/gtmEvents";
 import { PRODUCT_CATEGORIES } from "@/lib/categories";
 import { calculateOrderTotal, getApplicableDiscount } from "@/lib/priceCalculations";
+import { formatNumber } from "@/lib/formatters";
 import { DollarSign } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -578,7 +579,7 @@ export default function ProductCreate() {
                 </div>
                 <div>
                   <Label htmlFor="volume_calc" className="text-xs">Volumen (m³)</Label>
-                  <Input id="volume_calc" type="text" value={formData.packaging_length_cm && formData.packaging_width_cm && formData.packaging_height_cm ? (Number(formData.packaging_length_cm) * Number(formData.packaging_width_cm) * Number(formData.packaging_height_cm) / 1000000).toFixed(4) : "0.0000"} disabled className="bg-muted" />
+                  <Input id="volume_calc" type="text" value={formData.packaging_length_cm && formData.packaging_width_cm && formData.packaging_height_cm ? formatNumber(Number(formData.packaging_length_cm) * Number(formData.packaging_width_cm) * Number(formData.packaging_height_cm) / 1000000, 4, 4) : "0,0000"} disabled className="bg-muted" />
                 </div>
               </div>
             </div>
@@ -784,10 +785,10 @@ export default function ProductCreate() {
                         <div className="bg-muted rounded-lg p-3">
                           <p className="text-xs text-muted-foreground">Volumen total ({previewQuantity} {previewQuantity === 1 ? 'unidad' : 'unidades'})</p>
                           <p className="text-lg font-semibold">
-                            {(Number(formData.packaging_length_cm) * Number(formData.packaging_width_cm) * Number(formData.packaging_height_cm) / 1000000 * previewQuantity).toFixed(3)} m³
+                            {formatNumber(Number(formData.packaging_length_cm) * Number(formData.packaging_width_cm) * Number(formData.packaging_height_cm) / 1000000 * previewQuantity, 3, 3)} m³
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {(Number(formData.packaging_length_cm) * Number(formData.packaging_width_cm) * Number(formData.packaging_height_cm) / 1000000).toFixed(4)} m³ por unidad
+                            {formatNumber(Number(formData.packaging_length_cm) * Number(formData.packaging_width_cm) * Number(formData.packaging_height_cm) / 1000000, 4, 4)} m³ por unidad
                           </p>
                         </div>
                       </div>
@@ -805,7 +806,7 @@ export default function ProductCreate() {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <p className="text-sm text-muted-foreground">Precio Unitario</p>
-                            <p className="text-xl font-semibold">€{Number(formData.price_unit || 0).toFixed(2)}</p>
+                            <p className="text-xl font-semibold">€{formatNumber(Number(formData.price_unit || 0))}</p>
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Cantidad</p>
@@ -831,19 +832,19 @@ export default function ProductCreate() {
                         return <>
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Precio Base Total (FOB)</span>
-                                  <span className="font-medium">€{(basePrice * previewQuantity).toFixed(2)}</span>
+                                  <span className="font-medium">€{formatNumber(basePrice * previewQuantity)}</span>
                                 </div>
                                 {applicableDiscount > 0 && <div className="flex justify-between text-green-600 dark:text-green-400">
                                     <span>Descuento por Volumen (-{applicableDiscount}%)</span>
-                                    <span className="font-medium">-€{(basePrice * previewQuantity - totalFOB).toFixed(2)}</span>
+                                    <span className="font-medium">-€{formatNumber(basePrice * previewQuantity - totalFOB)}</span>
                                   </div>}
                                 {applicableDiscount > 0 && <div className="flex justify-between font-semibold">
                                     <span className="text-muted-foreground">Precio Total con Descuento</span>
-                                    <span className="font-medium">€{totalFOB.toFixed(2)}</span>
+                                    <span className="font-medium">€{formatNumber(totalFOB)}</span>
                                   </div>}
                                 <div className="flex justify-between text-amber-600 dark:text-amber-500">
                                   <span>Comisión Plataforma (12%)</span>
-                                  <span className="font-medium">-€{commission.toFixed(2)}</span>
+                                  <span className="font-medium">-€{formatNumber(commission)}</span>
                                 </div>
                               </>;
                       })()}
@@ -862,7 +863,7 @@ export default function ProductCreate() {
                             discount_10u: formData.discount_10u ? Number(formData.discount_10u) : null
                           };
                           const totalFOB = calculateOrderTotal(basePrice, previewQuantity, discounts);
-                          return (totalFOB * 0.88).toFixed(2);
+                          return formatNumber(totalFOB * 0.88);
                         })()}</span>
                         </div>
 

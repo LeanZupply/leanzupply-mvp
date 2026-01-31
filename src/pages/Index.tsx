@@ -123,14 +123,29 @@ const Index = () => {
         }]));
       }
 
-      // Adjuntar manufacturer básico compatible con ProductCard
+      // Cargar info adicional del fabricante desde manufacturers (registered_brand, brand_logo_url)
+      let manufacturersMap: Record<string, { registered_brand: string; brand_logo_url: string | null }> = {};
+      if (manufacturerIds.length > 0) {
+        const { data: manufacturersData } = await supabase
+          .from("manufacturers")
+          .select("user_id, registered_brand, brand_logo_url")
+          .in("user_id", manufacturerIds as string[]);
+        manufacturersMap = Object.fromEntries(
+          (manufacturersData || []).map((m: any) => [m.user_id, {
+            registered_brand: m.registered_brand,
+            brand_logo_url: m.brand_logo_url
+          }])
+        );
+      }
+
+      // Adjuntar manufacturer básico compatible con ProductCard (prioriza registered_brand)
       const normalized = products.map((p: any) => ({
         ...p,
         manufacturer: p.manufacturer_id ? {
-          registered_brand: profilesMap[p.manufacturer_id]?.company_name || undefined,
+          registered_brand: manufacturersMap[p.manufacturer_id]?.registered_brand || profilesMap[p.manufacturer_id]?.company_name || undefined,
           company_name: profilesMap[p.manufacturer_id]?.company_name,
           country: profilesMap[p.manufacturer_id]?.country,
-          brand_logo_url: undefined
+          brand_logo_url: manufacturersMap[p.manufacturer_id]?.brand_logo_url || undefined
         } : null
       }));
 

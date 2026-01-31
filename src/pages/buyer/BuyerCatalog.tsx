@@ -20,6 +20,7 @@ import { SkeletonCard } from "@/components/ui/skeleton-card";
 import { useProductsQuery } from "@/hooks/useProductsQuery";
 import { usePerformanceTracking } from "@/hooks/usePerformanceTracking";
 import { calculateOrderTotal } from "@/lib/priceCalculations";
+import { formatNumber } from "@/lib/formatters";
 interface Product {
   id: string;
   name: string;
@@ -29,6 +30,8 @@ interface Product {
   price_unit: number;
   moq: number;
   stock: number;
+  model?: string | null;
+  brand?: string | null;
   images: any;
   lead_time_production_days: number | null;
   discount_3u?: number | null;
@@ -225,7 +228,7 @@ const BuyerCatalog = () => {
                   <div className="grid grid-cols-2 gap-4 pt-3 border-t border-border">
                     <div>
                       <Label className="text-muted-foreground">Precio/Unidad</Label>
-                      <p className="font-bold text-xl text-primary">€{selectedProduct.price_unit.toLocaleString("es-ES")}</p>
+                      <p className="font-bold text-xl text-primary">€{formatNumber(selectedProduct.price_unit)}</p>
                     </div>
                     <div>
                       <Label className="text-muted-foreground">Cantidad Mínima</Label>
@@ -275,7 +278,7 @@ const BuyerCatalog = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-medium text-foreground">Precio Total Estimado:</span>
                     <span className="text-3xl font-bold text-primary">
-                      €{(Number(orderForm.quantity || 0) * selectedProduct.price_unit).toLocaleString("es-ES")}
+                      €{formatNumber(Number(orderForm.quantity || 0) * selectedProduct.price_unit)}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">

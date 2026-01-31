@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateOrderTotal } from "@/lib/priceCalculations";
+import { formatNumber } from "@/lib/formatters";
 
 export const PalletSidebar = () => {
   const { items, updateQuantity, removeFromPallet, getTotalPrice } = usePallet();
@@ -129,7 +130,7 @@ export const PalletSidebar = () => {
                           <h4 className="font-medium line-clamp-2">{item.product.name}</h4>
                           <Badge variant="secondary">{item.product.category}</Badge>
                           <p className="text-sm font-semibold">
-                            €{item.product.price_unit.toLocaleString()} x {item.quantity}
+                            €{formatNumber(item.product.price_unit)} x {item.quantity}
                           </p>
                           {item.notes && (
                             <p className="text-xs text-muted-foreground">{item.notes}</p>
@@ -172,12 +173,12 @@ export const PalletSidebar = () => {
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Subtotal:</span>
                         <span className="font-semibold">
-                          €{calculateOrderTotal(item.product.price_unit, item.quantity, {
+                          €{formatNumber(calculateOrderTotal(item.product.price_unit, item.quantity, {
                             discount_3u: item.product.discount_3u,
                             discount_5u: item.product.discount_5u,
                             discount_8u: item.product.discount_8u,
                             discount_10u: item.product.discount_10u,
-                          }).toLocaleString()}
+                          }))}
                         </span>
                       </div>
                     </Card>
@@ -188,7 +189,7 @@ export const PalletSidebar = () => {
               <div className="space-y-4 pt-4 border-t">
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total:</span>
-                  <span>€{getTotalPrice().toLocaleString()}</span>
+                  <span>€{formatNumber(getTotalPrice())}</span>
                 </div>
 
                 <Button

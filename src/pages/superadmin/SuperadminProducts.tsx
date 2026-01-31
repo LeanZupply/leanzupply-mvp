@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { handleError } from "@/lib/errorHandler";
 import { logActivity } from "@/lib/activityLogger";
+import { formatNumber } from "@/lib/formatters";
 
 interface Product {
   id: string;
@@ -311,7 +312,7 @@ const SuperadminProducts = () => {
                     <TableCell className="font-medium text-sm">{product.name}</TableCell>
                     <TableCell className="hidden sm:table-cell text-sm">{product.manufacturer?.company_name}</TableCell>
                     <TableCell className="hidden md:table-cell text-muted-foreground text-sm">{product.category}</TableCell>
-                    <TableCell className="hidden lg:table-cell font-semibold text-sm">€{product.price_unit.toLocaleString("es-ES")}</TableCell>
+                    <TableCell className="hidden lg:table-cell font-semibold text-sm">€{formatNumber(product.price_unit)}</TableCell>
                     <TableCell>
                       {getStatusBadge(product.status)}
                     </TableCell>
@@ -419,7 +420,7 @@ const SuperadminProducts = () => {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Precio/Unidad</p>
-                    <p className="font-medium">€{selectedProduct.price_unit.toLocaleString("es-ES")}</p>
+                    <p className="font-medium">€{formatNumber(selectedProduct.price_unit)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">MOQ</p>

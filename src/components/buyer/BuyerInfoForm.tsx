@@ -118,7 +118,7 @@ export function BuyerInfoForm({
       <CardHeader className="p-4 sm:p-6">
         <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
           <User className="h-4 w-4 sm:h-5 sm:w-5" />
-          Datos del Comprador
+          Información de Cliente para Realizar Compra
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 p-4 sm:p-6">
@@ -126,7 +126,7 @@ export function BuyerInfoForm({
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
             <User className="h-4 w-4" />
-            Informacion Personal
+            Información Empresa
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -140,7 +140,7 @@ export function BuyerInfoForm({
               />
             </div>
             <div>
-              <Label htmlFor="full_name">Nombre completo</Label>
+              <Label htmlFor="full_name">Nombre contacto completo</Label>
               <Input
                 id="full_name"
                 {...register("full_name")}
@@ -286,7 +286,7 @@ export function BuyerInfoForm({
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
             <Truck className="h-4 w-4" />
-            Direccion de Entrega
+            Información Dirección de Entrega
           </div>
 
           <div className="flex items-center space-x-2">

@@ -16,7 +16,14 @@ import {
   Download,
   AlertTriangle,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { formatNumber } from "@/lib/formatters";
 
 // Hardcoded bank details for Next Trade Global Limited
 const BANK_DETAILS = {
@@ -46,6 +53,7 @@ export function BankTransferModal({
   clientName = "",
 }: BankTransferModalProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [hasPdfDownloaded, setHasPdfDownloaded] = useState(false);
 
   const copyToClipboard = async (text: string, field: string) => {
     try {
@@ -80,10 +88,9 @@ export function BankTransferModal({
       return;
     }
 
-    const formattedAmount = totalAmount.toLocaleString("es-ES", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+    setHasPdfDownloaded(true);
+
+    const formattedAmount = formatNumber(totalAmount);
 
     const currentDate = new Date().toLocaleDateString("es-ES", {
       day: "2-digit",
@@ -105,6 +112,13 @@ export function BankTransferModal({
               padding: 0;
               box-sizing: border-box;
             }
+            :root {
+              --primary: #437056;
+              --primary-dark: #366349;
+              --primary-light: #50956d;
+              --primary-soft: #e8f3ee;
+              --primary-border: #cfe4d7;
+            }
             body {
               font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
               padding: 40px 50px;
@@ -118,13 +132,12 @@ export function BankTransferModal({
               text-align: center;
               margin-bottom: 30px;
               padding-bottom: 20px;
-              border-bottom: 3px solid #2563eb;
+              border-bottom: 3px solid var(--primary);
             }
-            .logo {
-              font-size: 32px;
-              font-weight: 700;
-              color: #2563eb;
-              letter-spacing: -0.5px;
+            .logo-image {
+              height: 44px;
+              width: auto;
+              object-fit: contain;
             }
             .subtitle {
               color: #64748b;
@@ -152,7 +165,7 @@ export function BankTransferModal({
               gap: 8px;
             }
             .section-number {
-              background: #2563eb;
+              background: var(--primary);
               color: white;
               width: 24px;
               height: 24px;
@@ -191,10 +204,10 @@ export function BankTransferModal({
               flex: 0 0 55%;
             }
             .highlight {
-              color: #2563eb;
+              color: var(--primary);
             }
             .amount-box {
-              background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+              background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
               color: white;
               padding: 20px;
               border-radius: 8px;
@@ -270,7 +283,7 @@ export function BankTransferModal({
               margin-bottom: 10px;
             }
             .legal a {
-              color: #2563eb;
+              color: var(--primary);
               text-decoration: none;
             }
             .footer {
@@ -283,17 +296,30 @@ export function BankTransferModal({
             }
             .footer-logo {
               font-weight: 600;
-              color: #2563eb;
+              color: var(--primary);
+            }
+            .close-button {
+              display: inline-block;
+              margin-top: 10px;
+              padding: 8px 14px;
+              border-radius: 6px;
+              border: 1px solid var(--primary-border);
+              background: var(--primary-soft);
+              color: var(--primary-dark);
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
             }
             @media print {
               body { padding: 20px 30px; }
               .info-card, .next-steps, .warning { break-inside: avoid; }
+              .close-button { display: none; }
             }
           </style>
         </head>
         <body>
           <div class="header">
-            <div class="logo">LeanZupply</div>
+            <img class="logo-image" src="${window.location.origin}/logo.png" alt="LeanZupply" />
             <div class="subtitle">Operacion gestionada a traves de LeanZupply</div>
           </div>
 
@@ -395,6 +421,8 @@ export function BankTransferModal({
 
           <div class="footer">
             <p>Documento generado el ${currentDate}</p>
+            <p style="margin-top: 6px;">Al terminar de descargar, cierre esta ventana.</p>
+            <button class="close-button" onclick="window.close()">Cerrar ventana</button>
             <p class="footer-logo">LeanZupply</p>
             <p>www.leanzupply.com</p>
           </div>
@@ -404,6 +432,7 @@ export function BankTransferModal({
 
     printWindow.document.close();
     printWindow.focus();
+    printWindow.onafterprint = () => printWindow.close();
     setTimeout(() => {
       printWindow.print();
     }, 250);
@@ -457,10 +486,7 @@ export function BankTransferModal({
             <div className="bg-primary rounded-lg p-4 text-center mt-3">
               <p className="text-sm text-primary-foreground/80">Importe a transferir</p>
               <p className="text-2xl font-bold text-primary-foreground">
-                EUR {totalAmount.toLocaleString("es-ES", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                EUR {formatNumber(totalAmount)}
               </p>
             </div>
           </div>
@@ -568,10 +594,27 @@ export function BankTransferModal({
             <Download className="h-4 w-4 mr-2" />
             Descargar PDF
           </Button>
-          <Button className="flex-1" onClick={onConfirm}>
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Confirmar que realizare la transferencia
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex-1">
+                  <Button
+                    className="w-full"
+                    onClick={onConfirm}
+                    disabled={!hasPdfDownloaded}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Confirmar que realizare la transferencia
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {!hasPdfDownloaded && (
+                <TooltipContent>
+                  <p>Primero descargue el PDF</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </DialogContent>
     </Dialog>
